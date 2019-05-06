@@ -2,10 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import './index.css'
 import * as serviceWorker from './serviceWorker'
-import SimpleBouncingBall from "./SimpleBouncingBall"
+import SimpleRotatingBaton from "./SimpleRotatingBaton"
 
 // ReactDOM.render(<App />, document.getElementById('root'));
-ReactDOM.render(<SimpleBouncingBall />, document.getElementById('root'));
+ReactDOM.render(<SimpleRotatingBaton />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

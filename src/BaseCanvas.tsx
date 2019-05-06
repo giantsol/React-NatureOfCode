@@ -42,7 +42,9 @@ export default abstract class BaseCanvas extends React.Component {
         if (context) {
             // clear canvas
             context.clearRect(0, 0, this.width, this.height)
+            context.save()
             this.draw()
+            context.restore()
             window.requestAnimationFrame(this.onAnimationFrame)
         }
     }
@@ -119,6 +121,30 @@ export default abstract class BaseCanvas extends React.Component {
 
     protected getHeight(): number {
         return this.height
+    }
+
+    protected translate(x: number, y: number) {
+        const context = this.canvasContext
+        if (context) {
+            context.translate(x, y)
+        }
+    }
+
+    protected rotate(radian: number) {
+        const context = this.canvasContext
+        if (context) {
+            context.rotate(radian)
+        }
+    }
+
+    protected line(x1: number, y1: number, x2: number, y2: number) {
+        const context = this.canvasContext
+        if (context) {
+            context.beginPath()
+            context.moveTo(x1, y1)
+            context.lineTo(x2, y2)
+            context.stroke()
+        }
     }
 
     protected drawCanvasBorder(draw: boolean) {
