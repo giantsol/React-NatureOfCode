@@ -1,6 +1,5 @@
 import React, {createRef} from 'react'
 import './BaseCanvas.css'
-import Utils from "./Utils"
 
 export default abstract class BaseCanvas extends React.Component {
 
