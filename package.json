@@ -66,11 +66,10 @@
     "workbox-webpack-plugin": "4.2.0"
   },
   "scripts": {
-    "start": "npm run build_dev && npm run start_server",
+    "start": "npm run build_dev && node -r ts-node/register src/server/server.ts",
     "start:watch": "nodemon",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js",
-    "start_server": "node -r ts-node/register src/server/server.ts",
     "build_dev": "node scripts/build_dev.js"
   },
   "eslintConfig": {
