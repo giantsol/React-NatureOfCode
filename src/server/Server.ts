@@ -1,8 +1,8 @@
 import {Request, Response} from "express"
-import {ServerSocket} from "./ServerSocket"
-import {ClientModels} from "../client/ClientModels"
-import {ServerModels} from "./ServerModels"
 import {ServerSocketEventsHelper} from "./ServerSocketEventsHelper"
+import {Socket} from "socket.io"
+import {ServerGameData, ServerPlayer} from "./ServerModels"
+import uuid = require("uuid")
 
 const express = require('express')
 const app = express()
@@ -18,36 +18,64 @@ app.get('/', (req: Request, res: Response) => {
 
 class Server {
 
-    constructor() {
-        ServerSocketEventsHelper.subscribeConnectedEvent(io, socket => {
-            this.subscribeSocketEvents(socket)
-        })
-    }
+    static readonly gameUpdateInterval = 1000 / 60
+    private gameDataReceivingSockets: Array<Socket> = []
+    private readonly gameData: ServerGameData = new ServerGameData()
 
     start(port: number): void {
         http.listen(port, () => {
             console.info(`Listening on port ${port}`)
         })
+
+        ServerSocketEventsHelper.subscribeConnectedEvent(io, socket => {
+            this.subscribeSocketEvents(socket)
+        })
+
+        setTimeout(this.gameUpdateLoop, Server.gameUpdateInterval)
     }
 
-    private subscribeSocketEvents(socket: ServerSocket): void {
-        this.subscribePlayerSignedInEvent(socket)
-        this.subscribePlayerSignedOutEvent(socket)
-    }
+    private subscribeSocketEvents(socket: Socket): void {
+        ServerSocketEventsHelper.subscribePlayerLoggingInEvent(socket, name => {
+            this.onPlayerLoggingInEvent(socket, name)
+        })
 
-    private subscribePlayerSignedInEvent(socket: ServerSocket): void {
-        ServerSocketEventsHelper.subscribePlayerSignedInEvent(socket, (player: ClientModels.Player) => {
-            socket.player = ServerModels.Player.createFrom(player)
-            ServerSocketEventsHelper.onNewPlayerCreated(socket, socket.player)
+        ServerSocketEventsHelper.subscribeStartReceivingGameDataEvent(socket, () => {
+            this.onStartReceivingGameDataEvent(socket)
+        })
+
+        ServerSocketEventsHelper.subscribeStopReceivingGameDataEvent(socket, () => {
+            this.onStopReceivingGameDataEvent(socket)
         })
     }
 
-    private subscribePlayerSignedOutEvent(socket: ServerSocket): void {
-        ServerSocketEventsHelper.subscribePlayerSignedOutEvent(socket, () => {
-            if (socket.player) {
-                ServerSocketEventsHelper.onPlayerLeft(socket, socket.player)
-            }
-        })
+    private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
+        const newPlayer = new ServerPlayer(uuid(), name)
+        this.gameData.addNewPlayer(newPlayer)
+
+        ServerSocketEventsHelper.sendPlayerLoggedIn(socket, newPlayer)
+    }
+
+    private onStartReceivingGameDataEvent = (socket: Socket) => {
+        this.gameDataReceivingSockets.push(socket)
+    }
+
+    private onStopReceivingGameDataEvent = (socket: Socket) => {
+        const index = this.gameDataReceivingSockets.indexOf(socket, 0)
+        if (index > -1) {
+            this.gameDataReceivingSockets.splice(index, 1)
+        }
+    }
+
+    private gameUpdateLoop = () => {
+        const gameData = this.gameData
+        // do game update logic
+
+        for (let socket of this.gameDataReceivingSockets) {
+            ServerSocketEventsHelper.sendGameData(socket, gameData)
+        }
+
+        // recursively call myself
+        setTimeout(this.gameUpdateLoop, Server.gameUpdateInterval)
     }
 }
 

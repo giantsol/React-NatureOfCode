@@ -6,11 +6,10 @@ import FormControl from '@material-ui/core/FormControl'
 import InputLabel from '@material-ui/core/InputLabel'
 import Input from '@material-ui/core/Input'
 import {ClientSocketEventsHelper} from "../ClientSocketEventsHelper"
-import {ClientModels} from "../ClientModels"
 
 interface Props {
     socket: SocketIOClient.Emitter
-    onLoggedIn: () => void
+    onLoggedIn: (id: string) => void
 }
 
 interface State {
@@ -26,8 +25,8 @@ export default class LogInView extends React.Component<Props, State> {
 
     componentDidMount(): void {
         const socket = this.props.socket
-        ClientSocketEventsHelper.subscribeYouJoinedEvent(socket, (player: ClientModels.Player) => {
-            this.props.onLoggedIn()
+        ClientSocketEventsHelper.subscribeYouJoinedEvent(socket, you => {
+            this.props.onLoggedIn(you.id)
         })
     }
 
@@ -41,7 +40,7 @@ export default class LogInView extends React.Component<Props, State> {
             <Grid container justify="center">
                 <Grid item xs={8} sm={6} lg={3}>
                     <Paper style={{paddingLeft: 16, paddingRight: 16}}>
-                        <form onSubmit={this.onLogInButtonClicked}>
+                        <form onSubmit={this.onLogInButtonClicked} autoComplete="off">
                             <FormControl margin="normal" required fullWidth>
                                 <InputLabel htmlFor="name">이름</InputLabel>
                                 <Input id="name" name="name" autoFocus value={this.state.inputName} onChange={this.onInputChanged}/>

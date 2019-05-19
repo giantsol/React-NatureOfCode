@@ -1,12 +1,11 @@
 import React from 'react'
-import {ClientSocketEventsHelper} from "./ClientSocketEventsHelper"
 import io from 'socket.io-client'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import LogInView from "./loginview/LogInView"
 import GameView from "./gameview/GameView"
 
 interface State {
-    isLoggedIn: boolean;
+    myId: string | null
 }
 
 export default class App extends React.Component<any, State> {
@@ -15,29 +14,18 @@ export default class App extends React.Component<any, State> {
     constructor(props: any) {
         super(props)
         this.state = {
-            isLoggedIn: false
+            myId: null
         }
 
         this.socket = io.connect()
-        this.subscribeSocketEvents(this.socket)
-    }
-
-    private subscribeSocketEvents(socket: SocketIOClient.Emitter): void {
-        this.subscribeNewPlayerJoinedEvent(socket)
-    }
-
-    private subscribeNewPlayerJoinedEvent(socket: SocketIOClient.Emitter): void {
-        ClientSocketEventsHelper.subscribeNewPlayerJoinedEvent(socket, player => {
-
-        })
     }
 
     render() {
-        const isLoggedIn = this.state.isLoggedIn
+        const myId = this.state.myId
 
         let mainContent
-        if (isLoggedIn) {
-            mainContent = <GameView socket={this.socket}/>
+        if (myId) {
+            mainContent = <GameView socket={this.socket} myId={myId}/>
         } else {
             mainContent = <LogInView socket={this.socket} onLoggedIn={this.onLoggedIn}/>
         }
@@ -50,8 +38,8 @@ export default class App extends React.Component<any, State> {
         )
     }
 
-    private onLoggedIn = () => {
-        this.setState({isLoggedIn: true})
+    private onLoggedIn = (id: string) => {
+        this.setState({myId: id})
     }
 }
 

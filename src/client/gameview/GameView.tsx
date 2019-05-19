@@ -1,21 +1,29 @@
 import React, {createRef} from 'react'
+import {ClientSocketEventsHelper} from "../ClientSocketEventsHelper"
+import {GameDataDTO, PlayerDTO} from "../../shared/DTOs"
+import {ClientGameData} from "../ClientModels"
 
 interface Props {
     socket: SocketIOClient.Emitter
+    myId: string
 }
 
 export default class GameView extends React.Component<Props, any> {
     private readonly canvasRef = createRef<HTMLCanvasElement>()
     private canvasContext: CanvasRenderingContext2D | null = null
+    private requestAnimationFrameHandler: number | null = null
 
-    static readonly drawWidth = 300
-    static readonly drawHeight = 300
+    // for fast access
+    private canvasWidth = 0
+    private canvasHeight = 0
+
+    private currentGameData: ClientGameData = new ClientGameData()
 
     render() {
         return (
             <React.Fragment>
-                <canvas ref={this.canvasRef} width={GameView.drawWidth} height={GameView.drawHeight}
-                        style={{width: "aut", height: "100vh", display: "block"}}>
+                <canvas ref={this.canvasRef} width={this.canvasWidth} height={this.canvasHeight}
+                        style={{width: "auto", height: "100vh", display: "block", margin: "auto"}}>
                     Fallback text for old browsers.
                 </canvas>
             </React.Fragment>
@@ -24,23 +32,57 @@ export default class GameView extends React.Component<Props, any> {
 
     componentDidMount(): void {
         const canvas = this.canvasRef.current
-        // ts에서는 optional chaining이 안되므로 이런 식으로..
         this.canvasContext = canvas && canvas.getContext('2d')
         if (this.canvasContext) {
-            // this.setup()
-            window.requestAnimationFrame(this.onAnimationFrame)
+            this.requestAnimationFrameHandler = window.requestAnimationFrame(this.onAnimationFrame)
+
+            const socket = this.props.socket
+            ClientSocketEventsHelper.startReceivingGameData(socket)
+            ClientSocketEventsHelper.subscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
+            ClientSocketEventsHelper.subscribeGameDataEvent(socket, this.onGameDataEvent)
         }
+    }
+
+    private onNewPlayerJoinedEvent = (player: PlayerDTO) => {
+        console.log(`New Player ${player.name} joined!`)
+    }
+
+    private onGameDataEvent = (gameData: GameDataDTO) => {
+        this.currentGameData.update(gameData)
     }
 
     componentWillUnmount(): void {
         this.canvasContext = null
+        if (this.requestAnimationFrameHandler) {
+            window.cancelAnimationFrame(this.requestAnimationFrameHandler)
+        }
+
+        const socket = this.props.socket
+        ClientSocketEventsHelper.stopReceivingFrameData(socket)
+        ClientSocketEventsHelper.unsubscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
+        ClientSocketEventsHelper.unsubscribeGameDataEvent(socket, this.onGameDataEvent)
     }
 
     private onAnimationFrame = () => {
         const ctx = this.canvasContext
-        if (ctx) {
-            ctx.fillRect(50, 50, 50, 50)
-            window.requestAnimationFrame(this.onAnimationFrame)
+        const gameData = this.currentGameData
+        if (ctx && gameData) {
+            gameData.draw(ctx, this.props.myId)
+            this.updateCanvasSizeIfChanged(gameData)
+        }
+
+        this.requestAnimationFrameHandler = window.requestAnimationFrame(this.onAnimationFrame)
+    }
+
+    private updateCanvasSizeIfChanged(gameData: ClientGameData): void {
+        if (this.canvasHeight != gameData.canvasHeight || this.canvasWidth != gameData.canvasWidth) {
+            const canvas = this.canvasRef.current
+            if (canvas) {
+                canvas.width = gameData.canvasWidth
+                canvas.height = gameData.canvasHeight
+                this.canvasWidth = gameData.canvasWidth
+                this.canvasHeight = gameData.canvasHeight
+            }
         }
     }
 }

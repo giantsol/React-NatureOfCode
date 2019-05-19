@@ -1,39 +1,48 @@
 import {Socket} from "socket.io"
-import {ServerModels} from "./ServerModels"
-import {ClientModels} from "../client/ClientModels"
 import {
     ConnectedEvent,
     ConnectedEventCallback,
+    GameDataEvent,
     NewPlayerJoinedEvent,
-    PlayerLeftEvent,
-    PlayerSignedInEvent,
-    PlayerSignedInEventCallback,
+    PlayerLoggingInEvent,
+    PlayerLoggingInEventCallback,
     PlayerSignedOutEvent,
     PlayerSignedOutEventCallback,
-    YouJoinedEvent
+    StartReceivingGameDataEvent,
+    StartReceivingGameDataEventCallback,
+    StopReceivingGameDataEvent,
+    StopReceivingGameDataEventCallback,
+    YouLoggedInEvent
 } from "../shared/SocketEvents"
+import {GameDataDTO, PlayerDTO} from "../shared/DTOs"
 
 export class ServerSocketEventsHelper {
     public static subscribeConnectedEvent(io: Socket, callback: ConnectedEventCallback): void {
         io.on(ConnectedEvent.key, callback)
     }
 
-    public static subscribePlayerSignedInEvent(socket: Socket, callback: PlayerSignedInEventCallback): void {
-        socket.on(PlayerSignedInEvent.key, callback)
+    public static subscribePlayerLoggingInEvent(socket: Socket, callback: PlayerLoggingInEventCallback): void {
+        socket.on(PlayerLoggingInEvent.key, callback)
     }
 
     public static subscribePlayerSignedOutEvent(socket: Socket, callback: PlayerSignedOutEventCallback): void {
         socket.on(PlayerSignedOutEvent.key, callback)
     }
 
-    public static onNewPlayerCreated(socket: Socket, player: ServerModels.Player): void {
-        const clientPlayer = ClientModels.Player.createFrom(player)
-        socket.emit(YouJoinedEvent.key, YouJoinedEvent.createParams(clientPlayer))
-        socket.broadcast.emit(NewPlayerJoinedEvent.key, NewPlayerJoinedEvent.createParams(clientPlayer))
+    public static subscribeStartReceivingGameDataEvent(socket: Socket, callback: StartReceivingGameDataEventCallback): void {
+        socket.on(StartReceivingGameDataEvent.key, callback)
     }
 
-    public static onPlayerLeft(socket: Socket, player: ServerModels.Player): void {
-        const clientPlayer = ClientModels.Player.createFrom(player)
-        socket.broadcast.emit(PlayerLeftEvent.key, PlayerLeftEvent.createParams(clientPlayer))
+    public static subscribeStopReceivingGameDataEvent(socket: Socket, callback: StopReceivingGameDataEventCallback): void {
+        socket.on(StopReceivingGameDataEvent.key, callback)
+    }
+
+    public static sendPlayerLoggedIn(socket: Socket, player: PlayerDTO): void {
+        socket.emit(YouLoggedInEvent.key, ...YouLoggedInEvent.emitterParams(player))
+        socket.broadcast.emit(NewPlayerJoinedEvent.key, ...NewPlayerJoinedEvent.emitterParams(player))
+    }
+
+    public static sendGameData(socket: Socket, gameData: GameDataDTO): void {
+        socket.emit(GameDataEvent.key, ...GameDataEvent.emitterParams(gameData))
     }
 }

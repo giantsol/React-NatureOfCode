@@ -1,21 +1,29 @@
-import {ClientModels} from "../client/ClientModels"
+import {Utils} from "../shared/Utils"
+import {GameDataDTO, PlayerDTO} from "../shared/DTOs"
 
-const uuid = require("uuid");
+export class ServerGameData implements GameDataDTO {
+    readonly players: ServerPlayer[] = []
+    readonly canvasHeight: number = 1000
+    readonly canvasWidth: number = 1000
 
-export namespace ServerModels {
-
-    export class Player {
-        name: string;
-        id: string;
-
-        constructor(name: string, id: string) {
-            this.name = name
-            this.id = id
-        }
-
-        static createFrom(clientPlayer: ClientModels.Player): Player {
-            return new Player(clientPlayer.name, uuid())
-        }
+    addNewPlayer(newPlayer: ServerPlayer): void {
+        newPlayer.x = Utils.randInt(0, this.canvasWidth)
+        newPlayer.y = Utils.randInt(0, this.canvasHeight)
+        newPlayer.size = Utils.randInt(5, 10)
+        this.players.push(newPlayer)
     }
-
 }
+
+export class ServerPlayer implements PlayerDTO{
+    readonly id: string
+    readonly name: string
+    x: number = 0
+    y: number = 0
+    size: number = 0
+
+    constructor(id: string, name: string) {
+        this.id = id
+        this.name = name
+    }
+}
+
