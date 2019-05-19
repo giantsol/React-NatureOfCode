@@ -1,8 +1,9 @@
 import React from 'react'
-import './App.css'
 import {ClientSocketEventsHelper} from "./ClientSocketEventsHelper"
 import io from 'socket.io-client'
-import {ClientModels} from "./ClientModels"
+import CssBaseline from '@material-ui/core/CssBaseline'
+import LogInView from "./loginview/LogInView"
+import GameView from "./gameview/GameView"
 
 interface State {
     isLoggedIn: boolean;
@@ -22,14 +23,7 @@ export default class App extends React.Component<any, State> {
     }
 
     private subscribeSocketEvents(socket: SocketIOClient.Emitter): void {
-        this.subscribeYouJoinedEvent(socket)
         this.subscribeNewPlayerJoinedEvent(socket)
-    }
-
-    private subscribeYouJoinedEvent(socket: SocketIOClient.Emitter): void {
-        ClientSocketEventsHelper.subscribeYouJoinedEvent(socket, (player: ClientModels.Player) => {
-            this.setState({isLoggedIn: true})
-        })
     }
 
     private subscribeNewPlayerJoinedEvent(socket: SocketIOClient.Emitter): void {
@@ -41,23 +35,23 @@ export default class App extends React.Component<any, State> {
     render() {
         const isLoggedIn = this.state.isLoggedIn
 
+        let mainContent
         if (isLoggedIn) {
-            return (
-                <div className="App">
-                    Hello! I am logged in!
-                </div>
-            )
+            mainContent = <GameView socket={this.socket}/>
         } else {
-            return (
-                <div className="App">
-                    <button onClick={this.onLogInButtonClicked}>Log In</button>
-                </div>
-            )
+            mainContent = <LogInView socket={this.socket} onLoggedIn={this.onLoggedIn}/>
         }
+
+        return (
+            <React.Fragment>
+                <CssBaseline />
+                {mainContent}
+            </React.Fragment>
+        )
     }
 
-    private onLogInButtonClicked = () => {
-        ClientSocketEventsHelper.onLogInClicked(this.socket)
+    private onLoggedIn = () => {
+        this.setState({isLoggedIn: true})
     }
 }
 
