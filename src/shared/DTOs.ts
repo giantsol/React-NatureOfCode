@@ -11,3 +11,10 @@ export interface PlayerDTO {
     y: number
     size: number
 }
+
+export interface PlayerInputDTO {
+    left: boolean
+    right: boolean
+    up: boolean
+    down: boolean
+}

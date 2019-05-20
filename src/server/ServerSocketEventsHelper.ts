@@ -12,7 +12,7 @@ import {
     StartReceivingGameDataEventCallback,
     StopReceivingGameDataEvent,
     StopReceivingGameDataEventCallback,
-    YouLoggedInEvent
+    YouLoggedInEvent, PlayerInputEventCallback, PlayerInputEvent
 } from "../shared/SocketEvents"
 import {GameDataDTO, PlayerDTO} from "../shared/DTOs"
 
@@ -48,5 +48,9 @@ export class ServerSocketEventsHelper {
 
     public static sendPlayerLeft(socket: Socket, player: PlayerDTO): void {
         socket.broadcast.emit(PlayerLeftEvent.key, ...PlayerLeftEvent.emitterParams(player))
+    }
+
+    public static subscribePlayerInputEvent(socket: Socket, callback: PlayerInputEventCallback): void {
+        socket.on(PlayerInputEvent.key, callback)
     }
 }

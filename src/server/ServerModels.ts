@@ -1,5 +1,5 @@
 import {Utils} from "../shared/Utils"
-import {GameDataDTO, PlayerDTO} from "../shared/DTOs"
+import {GameDataDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
 
 export class ServerGameData implements GameDataDTO {
     readonly players: ServerPlayer[] = []
@@ -24,6 +24,13 @@ export class ServerGameData implements GameDataDTO {
             return null
         }
     }
+
+    applyPlayerInput(id: string, playerInput: PlayerInputDTO): void {
+        const player = this.players.find(value => id == value.id)
+        if (player) {
+            player.applyInput(playerInput)
+        }
+    }
 }
 
 export class ServerPlayer implements PlayerDTO{
@@ -36,6 +43,24 @@ export class ServerPlayer implements PlayerDTO{
     constructor(id: string, name: string) {
         this.id = id
         this.name = name
+    }
+
+    applyInput(playerInput: PlayerInputDTO): void {
+        if (playerInput.up) {
+            this.y -= 1
+        }
+
+        if (playerInput.down) {
+            this.y += 1
+        }
+
+        if (playerInput.left) {
+            this.x -= 1
+        }
+
+        if (playerInput.right) {
+            this.x += 1
+        }
     }
 }
 

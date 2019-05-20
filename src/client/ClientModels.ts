@@ -85,3 +85,4 @@ export class ClientGameData implements GameDataDTO {
         }
     }
 }
+

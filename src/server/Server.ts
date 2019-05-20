@@ -2,7 +2,7 @@ import {Request, Response} from "express"
 import {ServerSocketEventsHelper} from "./ServerSocketEventsHelper"
 import {Socket} from "socket.io"
 import {ServerGameData, ServerPlayer} from "./ServerModels"
-import uuid = require("uuid")
+import {PlayerInputDTO} from "../shared/DTOs"
 
 const express = require('express')
 const app = express()
@@ -50,6 +50,10 @@ class Server {
         ServerSocketEventsHelper.subscribeDisconnectedEvent(socket, () => {
             this.onDisconnectedEvent(socket)
         })
+
+        ServerSocketEventsHelper.subscribePlayerInputEvent(socket, playerInput => {
+            this.onPlayerInputEvent(socket, playerInput)
+        })
     }
 
     private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
@@ -75,6 +79,10 @@ class Server {
         if (disconnectedPlayer) {
             ServerSocketEventsHelper.sendPlayerLeft(socket, disconnectedPlayer)
         }
+    }
+
+    private onPlayerInputEvent = (socket: Socket, playerInput: PlayerInputDTO) => {
+        this.gameData.applyPlayerInput(socket.id, playerInput)
     }
 
     private gameUpdateLoop = () => {

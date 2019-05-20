@@ -1,4 +1,4 @@
-import {GameDataDTO, PlayerDTO} from "./DTOs"
+import {GameDataDTO, PlayerDTO, PlayerInputDTO} from "./DTOs"
 import {Socket} from "socket.io"
 
 export type ConnectedEventCallback = (socket: Socket) => void
@@ -58,5 +58,13 @@ export class GameDataEvent {
     static readonly key = "game_data"
     static emitterParams(gameData: GameDataDTO): any[] {
         return [gameData]
+    }
+}
+
+export type PlayerInputEventCallback = (playerInput: PlayerInputDTO) => void
+export class PlayerInputEvent {
+    static readonly key = "player_input"
+    static emitterParams(playerInput: PlayerInputDTO): any[] {
+        return [playerInput]
     }
 }

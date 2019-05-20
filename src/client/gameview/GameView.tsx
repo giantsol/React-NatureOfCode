@@ -1,6 +1,6 @@
 import React, {createRef} from 'react'
 import {ClientSocketEventsHelper} from "../ClientSocketEventsHelper"
-import {GameDataDTO, PlayerDTO} from "../../shared/DTOs"
+import {GameDataDTO, PlayerDTO, PlayerInputDTO} from "../../shared/DTOs"
 import {ClientGameData} from "../ClientModels"
 import {withSnackbar} from 'notistack'
 import {WithSnackbarProps} from "notistack/build"
@@ -11,6 +11,8 @@ interface Props extends WithSnackbarProps {
 }
 
 class GameView extends React.Component<Props, any> {
+    private static readonly inputProcessingInterval = 1000 / 60
+
     private readonly canvasRef = createRef<HTMLCanvasElement>()
     private canvasContext: CanvasRenderingContext2D | null = null
     private requestAnimationFrameHandler: number | null = null
@@ -20,6 +22,14 @@ class GameView extends React.Component<Props, any> {
     private canvasHeight = 0
 
     private currentGameData: ClientGameData = new ClientGameData()
+
+    private readonly playerInput: PlayerInputDTO = {
+        left: false,
+        right: false,
+        up: false,
+        down: false
+    }
+    private inputProcessingLoopHandler: NodeJS.Timeout | null = null
 
     render() {
         return (
@@ -43,6 +53,41 @@ class GameView extends React.Component<Props, any> {
             ClientSocketEventsHelper.subscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
             ClientSocketEventsHelper.subscribeGameDataEvent(socket, this.onGameDataEvent)
             ClientSocketEventsHelper.subscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
+
+            // listen for user inputs 60 frames per sec
+            this.inputProcessingLoopHandler = setTimeout(this.processInputLoop, GameView.inputProcessingInterval)
+            document.addEventListener('keydown', event => {
+                switch (event.code) {
+                    case "ArrowLeft":
+                        this.playerInput.left = true
+                        break
+                    case "ArrowRight":
+                        this.playerInput.right = true
+                        break
+                    case "ArrowUp":
+                        this.playerInput.up = true
+                        break
+                    case "ArrowDown":
+                        this.playerInput.down = true
+                        break
+                }
+            })
+            document.addEventListener('keyup', event => {
+                switch (event.code) {
+                    case "ArrowLeft":
+                        this.playerInput.left = false
+                        break
+                    case "ArrowRight":
+                        this.playerInput.right = false
+                        break
+                    case "ArrowUp":
+                        this.playerInput.up = false
+                        break
+                    case "ArrowDown":
+                        this.playerInput.down = false
+                        break
+                }
+            })
         }
     }
 
@@ -58,6 +103,12 @@ class GameView extends React.Component<Props, any> {
         this.props.enqueueSnackbar(`Player Left ${playerDTO.name}`, { variant: 'error' })
     }
 
+    private processInputLoop = () => {
+        // send user input to the server
+        ClientSocketEventsHelper.sendPlayerInput(this.props.socket, this.playerInput)
+        this.inputProcessingLoopHandler = setTimeout(this.processInputLoop, GameView.inputProcessingInterval)
+    }
+
     componentWillUnmount(): void {
         this.canvasContext = null
         if (this.requestAnimationFrameHandler) {
@@ -69,6 +120,10 @@ class GameView extends React.Component<Props, any> {
         ClientSocketEventsHelper.unsubscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
         ClientSocketEventsHelper.unsubscribeGameDataEvent(socket, this.onGameDataEvent)
         ClientSocketEventsHelper.unsubscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
+
+        if (this.inputProcessingLoopHandler) {
+            clearTimeout(this.inputProcessingLoopHandler)
+        }
     }
 
     private onAnimationFrame = () => {
