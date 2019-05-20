@@ -2,13 +2,15 @@ import React, {createRef} from 'react'
 import {ClientSocketEventsHelper} from "../ClientSocketEventsHelper"
 import {GameDataDTO, PlayerDTO} from "../../shared/DTOs"
 import {ClientGameData} from "../ClientModels"
+import {withSnackbar} from 'notistack'
+import {WithSnackbarProps} from "notistack/build"
 
-interface Props {
+interface Props extends WithSnackbarProps {
     socket: SocketIOClient.Emitter
     myId: string
 }
 
-export default class GameView extends React.Component<Props, any> {
+class GameView extends React.Component<Props, any> {
     private readonly canvasRef = createRef<HTMLCanvasElement>()
     private canvasContext: CanvasRenderingContext2D | null = null
     private requestAnimationFrameHandler: number | null = null
@@ -45,7 +47,7 @@ export default class GameView extends React.Component<Props, any> {
     }
 
     private onNewPlayerJoinedEvent = (player: PlayerDTO) => {
-        console.log(`New Player ${player.name} joined!`)
+        this.props.enqueueSnackbar(`New Player ${player.name} joined!`, { variant: 'success' })
     }
 
     private onGameDataEvent = (gameData: GameDataDTO) => {
@@ -53,7 +55,7 @@ export default class GameView extends React.Component<Props, any> {
     }
 
     private onPlayerLeftEvent = (playerDTO: PlayerDTO) => {
-        console.log(`Player Left ${playerDTO.name}`)
+        this.props.enqueueSnackbar(`Player Left ${playerDTO.name}`, { variant: 'error' })
     }
 
     componentWillUnmount(): void {
@@ -92,3 +94,5 @@ export default class GameView extends React.Component<Props, any> {
         }
     }
 }
+
+export default withSnackbar(GameView)
