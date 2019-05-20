@@ -2,7 +2,7 @@ import {
     GameDataEvent,
     GameDataEventCallback,
     NewPlayerJoinedEvent,
-    NewPlayerJoinedEventCallback,
+    NewPlayerJoinedEventCallback, PlayerLeftEvent, PlayerLeftEventCallback,
     PlayerLoggingInEvent,
     StartReceivingGameDataEvent,
     StopReceivingGameDataEvent,
@@ -46,5 +46,13 @@ export class ClientSocketEventsHelper {
 
     public static stopReceivingFrameData(socket: SocketIOClient.Emitter): void {
         socket.emit(StopReceivingGameDataEvent.key)
+    }
+
+    public static subscribePlayerLeftEvent(socket: SocketIOClient.Emitter, callback: PlayerLeftEventCallback): void {
+        socket.on(PlayerLeftEvent.key, callback)
+    }
+
+    public static unsubscribePlayerLeftEvent(socket: SocketIOClient.Emitter, callback: PlayerLeftEventCallback): void {
+        socket.off(PlayerLeftEvent.key, callback)
     }
 }

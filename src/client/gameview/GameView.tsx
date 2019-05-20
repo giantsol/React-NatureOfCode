@@ -40,6 +40,7 @@ export default class GameView extends React.Component<Props, any> {
             ClientSocketEventsHelper.startReceivingGameData(socket)
             ClientSocketEventsHelper.subscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
             ClientSocketEventsHelper.subscribeGameDataEvent(socket, this.onGameDataEvent)
+            ClientSocketEventsHelper.subscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
         }
     }
 
@@ -49,6 +50,10 @@ export default class GameView extends React.Component<Props, any> {
 
     private onGameDataEvent = (gameData: GameDataDTO) => {
         this.currentGameData.update(gameData)
+    }
+
+    private onPlayerLeftEvent = (playerDTO: PlayerDTO) => {
+        console.log(`Player Left ${playerDTO.name}`)
     }
 
     componentWillUnmount(): void {
@@ -61,6 +66,7 @@ export default class GameView extends React.Component<Props, any> {
         ClientSocketEventsHelper.stopReceivingFrameData(socket)
         ClientSocketEventsHelper.unsubscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
         ClientSocketEventsHelper.unsubscribeGameDataEvent(socket, this.onGameDataEvent)
+        ClientSocketEventsHelper.unsubscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
     }
 
     private onAnimationFrame = () => {

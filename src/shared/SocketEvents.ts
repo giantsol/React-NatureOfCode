@@ -27,9 +27,12 @@ export class PlayerLoggingInEvent {
     }
 }
 
-export type PlayerSignedOutEventCallback = () => void
-export class PlayerSignedOutEvent {
+export type PlayerLeftEventCallback = (player: PlayerDTO) => void
+export class PlayerLeftEvent {
     static readonly key = "player_signed_out"
+    static emitterParams(player: PlayerDTO): any[] {
+        return [player]
+    }
 }
 
 export type YouLoggedInEventCallback = (you: PlayerDTO) => void

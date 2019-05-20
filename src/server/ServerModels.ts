@@ -12,6 +12,18 @@ export class ServerGameData implements GameDataDTO {
         newPlayer.size = Utils.randInt(5, 10)
         this.players.push(newPlayer)
     }
+
+    removePlayerById(id: string): ServerPlayer | null {
+        const players = this.players
+        const index = players.findIndex(value => id == value.id)
+        if (index >= 0) {
+            const removingPlayer = players[index]
+            players.splice(index, 1)
+            return removingPlayer
+        } else {
+            return null
+        }
+    }
 }
 
 export class ServerPlayer implements PlayerDTO{

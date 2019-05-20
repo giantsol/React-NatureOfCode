@@ -1,13 +1,13 @@
 import {Socket} from "socket.io"
 import {
     ConnectedEvent,
-    ConnectedEventCallback,
+    ConnectedEventCallback, DisconnectedEvent, DisconnectedEventCallback,
     GameDataEvent,
     NewPlayerJoinedEvent,
     PlayerLoggingInEvent,
     PlayerLoggingInEventCallback,
-    PlayerSignedOutEvent,
-    PlayerSignedOutEventCallback,
+    PlayerLeftEvent,
+    PlayerLeftEventCallback,
     StartReceivingGameDataEvent,
     StartReceivingGameDataEventCallback,
     StopReceivingGameDataEvent,
@@ -17,16 +17,16 @@ import {
 import {GameDataDTO, PlayerDTO} from "../shared/DTOs"
 
 export class ServerSocketEventsHelper {
-    public static subscribeConnectedEvent(io: Socket, callback: ConnectedEventCallback): void {
-        io.on(ConnectedEvent.key, callback)
+    public static subscribeConnectedEvent(socket: Socket, callback: ConnectedEventCallback): void {
+        socket.on(ConnectedEvent.key, callback)
+    }
+
+    public static subscribeDisconnectedEvent(socket: Socket, callback: DisconnectedEventCallback): void {
+        socket.on(DisconnectedEvent.key, callback)
     }
 
     public static subscribePlayerLoggingInEvent(socket: Socket, callback: PlayerLoggingInEventCallback): void {
         socket.on(PlayerLoggingInEvent.key, callback)
-    }
-
-    public static subscribePlayerSignedOutEvent(socket: Socket, callback: PlayerSignedOutEventCallback): void {
-        socket.on(PlayerSignedOutEvent.key, callback)
     }
 
     public static subscribeStartReceivingGameDataEvent(socket: Socket, callback: StartReceivingGameDataEventCallback): void {
@@ -44,5 +44,9 @@ export class ServerSocketEventsHelper {
 
     public static sendGameData(socket: Socket, gameData: GameDataDTO): void {
         socket.emit(GameDataEvent.key, ...GameDataEvent.emitterParams(gameData))
+    }
+
+    public static sendPlayerLeft(socket: Socket, player: PlayerDTO): void {
+        socket.broadcast.emit(PlayerLeftEvent.key, ...PlayerLeftEvent.emitterParams(player))
     }
 }

@@ -46,10 +46,14 @@ class Server {
         ServerSocketEventsHelper.subscribeStopReceivingGameDataEvent(socket, () => {
             this.onStopReceivingGameDataEvent(socket)
         })
+
+        ServerSocketEventsHelper.subscribeDisconnectedEvent(socket, () => {
+            this.onDisconnectedEvent(socket)
+        })
     }
 
     private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
-        const newPlayer = new ServerPlayer(uuid(), name)
+        const newPlayer = new ServerPlayer(socket.id, name)
         this.gameData.addNewPlayer(newPlayer)
 
         ServerSocketEventsHelper.sendPlayerLoggedIn(socket, newPlayer)
@@ -63,6 +67,13 @@ class Server {
         const index = this.gameDataReceivingSockets.indexOf(socket, 0)
         if (index > -1) {
             this.gameDataReceivingSockets.splice(index, 1)
+        }
+    }
+
+    private onDisconnectedEvent = (socket: Socket) => {
+        const disconnectedPlayer = this.gameData.removePlayerById(socket.id)
+        if (disconnectedPlayer) {
+            ServerSocketEventsHelper.sendPlayerLeft(socket, disconnectedPlayer)
         }
     }
 
