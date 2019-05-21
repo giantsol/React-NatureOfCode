@@ -1,10 +1,20 @@
 import {Utils} from "../shared/Utils"
-import {GameDataDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
+import {GameDataDTO, PlaceDTO, PlaceTypeDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
 
 export class ServerGameData implements GameDataDTO {
     readonly players: ServerPlayer[] = []
+    readonly places: ServerPlace[]
     readonly canvasHeight: number = 1000
     readonly canvasWidth: number = 1000
+
+    constructor() {
+        this.places = [
+            new ServerLake(200, 200, 50),
+            new ServerSnowland(400, 250, 50),
+            new ServerIceland(800, 600, 100),
+            new ServerHighGrassland(100, 900, 70)
+        ]
+    }
 
     addNewPlayer(newPlayer: ServerPlayer): void {
         newPlayer.x = Utils.randInt(0, this.canvasWidth)
@@ -33,7 +43,7 @@ export class ServerGameData implements GameDataDTO {
     }
 }
 
-export class ServerPlayer implements PlayerDTO{
+export class ServerPlayer implements PlayerDTO {
     readonly id: string
     readonly name: string
     x: number = 0
@@ -64,3 +74,78 @@ export class ServerPlayer implements PlayerDTO{
     }
 }
 
+interface ServerPlace extends PlaceDTO {
+    applyForce(player: ServerPlayer): void
+}
+
+export class ServerLake implements ServerPlace {
+    readonly x: number
+    readonly y: number
+    readonly type: PlaceTypeDTO
+    readonly size: number
+
+    constructor(x: number, y: number, size: number) {
+        this.x = x
+        this.y = y
+        this.size = size
+        this.type = PlaceTypeDTO.LAKE
+    }
+
+    applyForce(player: ServerPlayer): void {
+
+    }
+}
+
+export class ServerSnowland implements ServerPlace {
+    readonly x: number
+    readonly y: number
+    readonly type: PlaceTypeDTO
+    readonly size: number
+
+    constructor(x: number, y: number, size: number) {
+        this.x = x
+        this.y = y
+        this.size = size
+        this.type = PlaceTypeDTO.SNOWLAND
+    }
+
+    applyForce(player: ServerPlayer): void {
+
+    }
+}
+
+export class ServerIceland implements ServerPlace {
+    readonly x: number
+    readonly y: number
+    readonly type: PlaceTypeDTO
+    readonly size: number
+
+    constructor(x: number, y: number, size: number) {
+        this.x = x
+        this.y = y
+        this.size = size
+        this.type = PlaceTypeDTO.ICELAND
+    }
+
+    applyForce(player: ServerPlayer): void {
+
+    }
+}
+
+export class ServerHighGrassland implements ServerPlace {
+    readonly x: number
+    readonly y: number
+    readonly type: PlaceTypeDTO
+    readonly size: number
+
+    constructor(x: number, y: number, size: number) {
+        this.x = x
+        this.y = y
+        this.size = size
+        this.type = PlaceTypeDTO.HIGHGRASSLAND
+    }
+
+    applyForce(player: ServerPlayer): void {
+
+    }
+}
