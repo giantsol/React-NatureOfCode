@@ -33,3 +33,13 @@ export enum PlaceTypeDTO {
     ICELAND,
     HIGHGRASSLAND
 }
+
+export interface ProjectSelectionDataDTO {
+    previews: ProjectPreviewDTO[]
+}
+
+export interface ProjectPreviewDTO {
+    num: number
+    name: string
+    isOpen: boolean
+}

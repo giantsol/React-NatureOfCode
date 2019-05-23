@@ -1,7 +1,9 @@
 import {Socket} from "socket.io"
 import {
     ConnectedEvent,
-    ConnectedEventCallback, DisconnectedEvent, DisconnectedEventCallback,
+    ConnectedEventCallback,
+    DisconnectedEvent,
+    DisconnectedEventCallback,
     GameDataEvent,
     NewPlayerJoinedEvent,
     PlayerLoggingInEvent,
@@ -12,9 +14,16 @@ import {
     StartReceivingGameDataEventCallback,
     StopReceivingGameDataEvent,
     StopReceivingGameDataEventCallback,
-    YouLoggedInEvent, PlayerInputEventCallback, PlayerInputEvent
+    YouLoggedInEvent,
+    PlayerInputEventCallback,
+    PlayerInputEvent,
+    StartReceivingProjectSelectionDataEventCallback,
+    StartReceivingProjectSelectionDataEvent,
+    StopReceivingProjectSelectionDataEventCallback,
+    StopReceivingProjectSelectionDataEvent,
+    ProjectSelectionDataEvent
 } from "../shared/SocketEvents"
-import {GameDataDTO, PlayerDTO} from "../shared/DTOs"
+import {GameDataDTO, PlayerDTO, ProjectSelectionDataDTO} from "../shared/DTOs"
 
 export class ServerSocketEventsHelper {
     public static subscribeConnectedEvent(socket: Socket, callback: ConnectedEventCallback): void {
@@ -52,5 +61,17 @@ export class ServerSocketEventsHelper {
 
     public static subscribePlayerInputEvent(socket: Socket, callback: PlayerInputEventCallback): void {
         socket.on(PlayerInputEvent.key, callback)
+    }
+
+    public static subscribeStartReceivingProjectSelectionDataEvent(socket: Socket, callback: StartReceivingProjectSelectionDataEventCallback): void {
+        socket.on(StartReceivingProjectSelectionDataEvent.key, callback)
+    }
+
+    public static subscribeStopReceivingProjectSelectionDataEvent(socket: Socket, callback: StopReceivingProjectSelectionDataEventCallback): void {
+        socket.on(StopReceivingProjectSelectionDataEvent.key, callback)
+    }
+
+    public static sendProjectSelectionData(socket: Socket, projectSelectionData: ProjectSelectionDataDTO): void {
+        socket.emit(ProjectSelectionDataEvent.key, ...ProjectSelectionDataEvent.emitterParams(projectSelectionData))
     }
 }

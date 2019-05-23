@@ -4,9 +4,11 @@ import './index.css'
 import * as serviceWorker from './serviceWorker'
 import App from "./App"
 import {SnackbarProvider} from 'notistack'
+import {CssBaseline} from "@material-ui/core"
 
 ReactDOM.render(
     <SnackbarProvider maxSnack={5}>
+        <CssBaseline />
         <App />
     </SnackbarProvider>,
     document.getElementById('root'));

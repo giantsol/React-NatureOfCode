@@ -1,4 +1,4 @@
-import {GameDataDTO, PlayerDTO, PlayerInputDTO} from "./DTOs"
+import {GameDataDTO, PlayerDTO, PlayerInputDTO, ProjectSelectionDataDTO} from "./DTOs"
 import {Socket} from "socket.io"
 
 export type ConnectedEventCallback = (socket: Socket) => void
@@ -66,5 +66,23 @@ export class PlayerInputEvent {
     static readonly key = "player_input"
     static emitterParams(playerInput: PlayerInputDTO): any[] {
         return [playerInput]
+    }
+}
+
+export type StartReceivingProjectSelectionDataEventCallback = () => void
+export class StartReceivingProjectSelectionDataEvent {
+    static readonly key = "start_receiving_project_selection_data"
+}
+
+export type StopReceivingProjectSelectionDataEventCallback = () => void
+export class StopReceivingProjectSelectionDataEvent {
+    static readonly key = "stop_receiving_project_selection_data"
+}
+
+export type ProjectSelectionDataEventCallback = (projectSelectionData: ProjectSelectionDataDTO) => void
+export class ProjectSelectionDataEvent {
+    static readonly key = "project_selection"
+    static emitterParams(projectSelectionData: ProjectSelectionDataDTO): any[] {
+        return [projectSelectionData]
     }
 }

@@ -3,9 +3,9 @@ import {
     GameDataEventCallback,
     NewPlayerJoinedEvent,
     NewPlayerJoinedEventCallback, PlayerInputEvent, PlayerLeftEvent, PlayerLeftEventCallback,
-    PlayerLoggingInEvent,
-    StartReceivingGameDataEvent,
-    StopReceivingGameDataEvent,
+    PlayerLoggingInEvent, ProjectSelectionDataEvent, ProjectSelectionDataEventCallback,
+    StartReceivingGameDataEvent, StartReceivingProjectSelectionDataEvent,
+    StopReceivingGameDataEvent, StopReceivingProjectSelectionDataEvent,
     YouLoggedInEvent,
     YouLoggedInEventCallback
 } from "../shared/SocketEvents"
@@ -59,5 +59,21 @@ export class ClientSocketEventsHelper {
 
     public static sendPlayerInput(socket: SocketIOClient.Emitter, playerInput: PlayerInputDTO): void {
         socket.emit(PlayerInputEvent.key, ...PlayerInputEvent.emitterParams(playerInput))
+    }
+
+    public static startReceivingProjectSelectionDataEvent(socket: SocketIOClient.Emitter): void {
+        socket.emit(StartReceivingProjectSelectionDataEvent.key)
+    }
+
+    public static stopReceivingProjectSelectionDataEvent(socket: SocketIOClient.Emitter): void {
+        socket.emit(StopReceivingProjectSelectionDataEvent.key)
+    }
+
+    public static subscribeProjectSelectionDataEvent(socket: SocketIOClient.Emitter, callback: ProjectSelectionDataEventCallback): void {
+        socket.on(ProjectSelectionDataEvent.key, callback)
+    }
+
+    public static unsubscribeProjectSelectionDataEvent(socket: SocketIOClient.Emitter, callback: ProjectSelectionDataEventCallback): void {
+        socket.off(ProjectSelectionDataEvent.key, callback)
     }
 }

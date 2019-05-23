@@ -2,7 +2,7 @@ import {Request, Response} from "express"
 import {ServerSocketEventsHelper} from "./ServerSocketEventsHelper"
 import {Socket} from "socket.io"
 import {ServerGameData, ServerPlayer} from "./ServerModels"
-import {PlayerInputDTO} from "../shared/DTOs"
+import {PlayerInputDTO, ProjectSelectionDataDTO} from "../shared/DTOs"
 
 const express = require('express')
 const app = express()
@@ -21,6 +21,15 @@ class Server {
     static readonly gameUpdateInterval = 1000 / 60
     private gameDataReceivingSockets: Array<Socket> = []
     private readonly gameData: ServerGameData = new ServerGameData()
+
+    private projectSelectionDataReceivingSockets: Array<Socket> = []
+    private readonly projectSelectionData: ProjectSelectionDataDTO = {
+        previews: [
+            { num: 1, name: "First", isOpen: true },
+            { num: 2, name: "Second", isOpen: true },
+            { num: 3, name: "Third", isOpen: false }
+        ]
+    }
 
     start(port: number): void {
         http.listen(port, () => {
@@ -54,9 +63,18 @@ class Server {
         ServerSocketEventsHelper.subscribePlayerInputEvent(socket, playerInput => {
             this.onPlayerInputEvent(socket, playerInput)
         })
+
+        ServerSocketEventsHelper.subscribeStartReceivingProjectSelectionDataEvent(socket, () => {
+            this.onStartReceivingProjectSelectionDataEvent(socket)
+        })
+
+        ServerSocketEventsHelper.subscribeStopReceivingProjectSelectionDataEvent(socket, () => {
+            this.onStopReceivingProjectSelectionDataEvent(socket)
+        })
     }
 
     private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
+        console.log(name)
         const newPlayer = new ServerPlayer(socket.id, name)
         this.gameData.addNewPlayer(newPlayer)
 
@@ -83,6 +101,19 @@ class Server {
 
     private onPlayerInputEvent = (socket: Socket, playerInput: PlayerInputDTO) => {
         this.gameData.applyPlayerInput(socket.id, playerInput)
+    }
+
+    private onStartReceivingProjectSelectionDataEvent = (socket: Socket) => {
+        this.projectSelectionDataReceivingSockets.push(socket)
+
+        ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectSelectionData)
+    }
+
+    private onStopReceivingProjectSelectionDataEvent = (socket: Socket) => {
+        const index = this.projectSelectionDataReceivingSockets.indexOf(socket, 0)
+        if (index > -1) {
+            this.projectSelectionDataReceivingSockets.splice(index, 1)
+        }
     }
 
     private gameUpdateLoop = () => {
