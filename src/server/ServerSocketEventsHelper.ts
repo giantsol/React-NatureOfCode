@@ -21,9 +21,18 @@ import {
     StartReceivingProjectSelectionDataEvent,
     StopReceivingProjectSelectionDataEventCallback,
     StopReceivingProjectSelectionDataEvent,
-    ProjectSelectionDataEvent
+    ProjectSelectionDataEvent,
+    RequestRootEventCallback,
+    RequestRootEvent,
+    RequestUnrootEventCallback, RequestUnrootEvent, RootMessageEvent
 } from "../shared/SocketEvents"
-import {GameDataDTO, PlayerDTO, ProjectSelectionDataDTO} from "../shared/DTOs"
+import {
+    GameDataDTO,
+    PlayerDTO,
+    ProjectPreviewDTO,
+    ProjectSelectionDataDTO,
+    RootMessageDTO
+} from "../shared/DTOs"
 
 export class ServerSocketEventsHelper {
     public static subscribeConnectedEvent(socket: Socket, callback: ConnectedEventCallback): void {
@@ -71,7 +80,22 @@ export class ServerSocketEventsHelper {
         socket.on(StopReceivingProjectSelectionDataEvent.key, callback)
     }
 
-    public static sendProjectSelectionData(socket: Socket, projectSelectionData: ProjectSelectionDataDTO): void {
-        socket.emit(ProjectSelectionDataEvent.key, ...ProjectSelectionDataEvent.emitterParams(projectSelectionData))
+    public static sendProjectSelectionData(socket: Socket, projectPreviews: ProjectPreviewDTO[], rootIds: string[]): void {
+        socket.emit(ProjectSelectionDataEvent.key,
+            ...ProjectSelectionDataEvent.emitterParams({isRoot: rootIds.includes(socket.id), previews: projectPreviews})
+        )
     }
+
+    public static subscribeRequestRootEvent(socket: Socket, callback: RequestRootEventCallback): void {
+        socket.on(RequestRootEvent.key, callback)
+    }
+
+    public static subscribeRequestUnrootEvent(socket: Socket, callback: RequestUnrootEventCallback): void {
+        socket.on(RequestUnrootEvent.key, callback)
+    }
+
+    public static sendRootMessageEvent(socket: Socket, rootMessage: RootMessageDTO): void {
+        socket.emit(RootMessageEvent.key, ...RootMessageEvent.emitterParams(rootMessage))
+    }
+
 }

@@ -2,10 +2,18 @@ import {
     GameDataEvent,
     GameDataEventCallback,
     NewPlayerJoinedEvent,
-    NewPlayerJoinedEventCallback, PlayerInputEvent, PlayerLeftEvent, PlayerLeftEventCallback,
-    PlayerLoggingInEvent, ProjectSelectionDataEvent, ProjectSelectionDataEventCallback,
-    StartReceivingGameDataEvent, StartReceivingProjectSelectionDataEvent,
-    StopReceivingGameDataEvent, StopReceivingProjectSelectionDataEvent,
+    NewPlayerJoinedEventCallback,
+    PlayerInputEvent,
+    PlayerLeftEvent,
+    PlayerLeftEventCallback,
+    PlayerLoggingInEvent,
+    ProjectSelectionDataEvent,
+    ProjectSelectionDataEventCallback,
+    RequestRootEvent, RequestUnrootEvent, RootMessageEvent, RootMessageEventCallback,
+    StartReceivingGameDataEvent,
+    StartReceivingProjectSelectionDataEvent,
+    StopReceivingGameDataEvent,
+    StopReceivingProjectSelectionDataEvent,
     YouLoggedInEvent,
     YouLoggedInEventCallback
 } from "../shared/SocketEvents"
@@ -37,7 +45,7 @@ export class ClientSocketEventsHelper {
         socket.off(GameDataEvent.key, callback)
     }
 
-    public static onLogInClicked(socket: SocketIOClient.Emitter, name: string): void {
+    public static sendLoggingInEvent(socket: SocketIOClient.Emitter, name: string): void {
         socket.emit(PlayerLoggingInEvent.key, ...PlayerLoggingInEvent.emitterParams(name))
     }
 
@@ -75,5 +83,21 @@ export class ClientSocketEventsHelper {
 
     public static unsubscribeProjectSelectionDataEvent(socket: SocketIOClient.Emitter, callback: ProjectSelectionDataEventCallback): void {
         socket.off(ProjectSelectionDataEvent.key, callback)
+    }
+
+    public static sendRequestRootEvent(socket: SocketIOClient.Emitter, password: string): void {
+        socket.emit(RequestRootEvent.key, ...RequestRootEvent.emitterParams(password))
+    }
+
+    public static sendRequestUnrootEvent(socket: SocketIOClient.Emitter): void {
+        socket.emit(RequestUnrootEvent.key)
+    }
+
+    public static subscribeRootMessageEvent(socket: SocketIOClient.Emitter, callback: RootMessageEventCallback): void {
+        socket.on(RootMessageEvent.key, callback)
+    }
+
+    public static unsubscribeRootMessageEvent(socket: SocketIOClient.Emitter, callback: RootMessageEventCallback): void {
+        socket.off(RootMessageEvent.key, callback)
     }
 }

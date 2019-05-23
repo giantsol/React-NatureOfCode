@@ -59,6 +59,6 @@ export default class LogInView extends React.Component<Props, State> {
 
     private onLogInButtonClicked = (event: FormEvent) => {
         event.preventDefault()
-        ClientSocketEventsHelper.onLogInClicked(this.props.socket, this.state.inputName)
+        ClientSocketEventsHelper.sendLoggingInEvent(this.props.socket, this.state.inputName)
     }
 }

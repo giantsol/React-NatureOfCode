@@ -2,7 +2,7 @@ import {Request, Response} from "express"
 import {ServerSocketEventsHelper} from "./ServerSocketEventsHelper"
 import {Socket} from "socket.io"
 import {ServerGameData, ServerPlayer} from "./ServerModels"
-import {PlayerInputDTO, ProjectSelectionDataDTO} from "../shared/DTOs"
+import {PlayerInputDTO, RootMessageDTO} from "../shared/DTOs"
 
 const express = require('express')
 const app = express()
@@ -23,13 +23,14 @@ class Server {
     private readonly gameData: ServerGameData = new ServerGameData()
 
     private projectSelectionDataReceivingSockets: Array<Socket> = []
-    private readonly projectSelectionData: ProjectSelectionDataDTO = {
-        previews: [
-            { num: 1, name: "First", isOpen: true },
-            { num: 2, name: "Second", isOpen: true },
-            { num: 3, name: "Third", isOpen: false }
-        ]
-    }
+    private readonly projectPreviews = [
+        { num: 1, name: "First", isOpen: true },
+        { num: 2, name: "Second", isOpen: true },
+        { num: 3, name: "Third", isOpen: false }
+    ]
+    private rootIds: string[] = []
+
+    private readonly rootPassword = "2052"
 
     start(port: number): void {
         http.listen(port, () => {
@@ -71,6 +72,14 @@ class Server {
         ServerSocketEventsHelper.subscribeStopReceivingProjectSelectionDataEvent(socket, () => {
             this.onStopReceivingProjectSelectionDataEvent(socket)
         })
+
+        ServerSocketEventsHelper.subscribeRequestRootEvent(socket, password => {
+            this.onRequestRootEvent(socket, password)
+        })
+
+        ServerSocketEventsHelper.subscribeRequestUnrootEvent(socket, () => {
+            this.onRequestUnrootEvent(socket)
+        })
     }
 
     private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
@@ -106,7 +115,7 @@ class Server {
     private onStartReceivingProjectSelectionDataEvent = (socket: Socket) => {
         this.projectSelectionDataReceivingSockets.push(socket)
 
-        ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectSelectionData)
+        ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
     }
 
     private onStopReceivingProjectSelectionDataEvent = (socket: Socket) => {
@@ -114,6 +123,25 @@ class Server {
         if (index > -1) {
             this.projectSelectionDataReceivingSockets.splice(index, 1)
         }
+    }
+
+    private onRequestRootEvent = (socket: Socket, password: string) => {
+        if (password == this.rootPassword) {
+            this.rootIds.push(socket.id)
+            ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
+            ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.ROOT_REQUEST_ACCEPTED)
+        } else {
+            ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.ROOT_REQUEST_DENIED)
+        }
+    }
+
+    private onRequestUnrootEvent = (socket: Socket) => {
+        const index = this.rootIds.indexOf(socket.id, 0)
+        if (index > -1) {
+            this.rootIds.splice(index, 1)
+        }
+        ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
+        ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.UNROOTED)
     }
 
     private gameUpdateLoop = () => {

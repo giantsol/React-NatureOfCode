@@ -1,4 +1,10 @@
-import {GameDataDTO, PlayerDTO, PlayerInputDTO, ProjectSelectionDataDTO} from "./DTOs"
+import {
+    GameDataDTO,
+    PlayerDTO,
+    PlayerInputDTO,
+    ProjectSelectionDataDTO,
+    RootMessageDTO
+} from "./DTOs"
 import {Socket} from "socket.io"
 
 export type ConnectedEventCallback = (socket: Socket) => void
@@ -84,5 +90,26 @@ export class ProjectSelectionDataEvent {
     static readonly key = "project_selection"
     static emitterParams(projectSelectionData: ProjectSelectionDataDTO): any[] {
         return [projectSelectionData]
+    }
+}
+
+export type RequestRootEventCallback = (password: string) => void
+export class RequestRootEvent {
+    static readonly key = "request_root"
+    static emitterParams(password: string): any[] {
+        return [password]
+    }
+}
+
+export type RequestUnrootEventCallback = () => void
+export class RequestUnrootEvent {
+    static readonly key = "request_unroot"
+}
+
+export type RootMessageEventCallback = (rootMessage: RootMessageDTO) => void
+export class RootMessageEvent {
+    static readonly key = "root_message"
+    static emitterParams(rootMessage: RootMessageDTO): any[] {
+        return [rootMessage]
     }
 }

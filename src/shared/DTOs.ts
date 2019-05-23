@@ -35,6 +35,7 @@ export enum PlaceTypeDTO {
 }
 
 export interface ProjectSelectionDataDTO {
+    isRoot: boolean
     previews: ProjectPreviewDTO[]
 }
 
@@ -42,4 +43,10 @@ export interface ProjectPreviewDTO {
     num: number
     name: string
     isOpen: boolean
+}
+
+export enum RootMessageDTO {
+    ROOT_REQUEST_ACCEPTED,
+    ROOT_REQUEST_DENIED,
+    UNROOTED
 }
