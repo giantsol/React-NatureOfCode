@@ -80,6 +80,14 @@ class Server {
         ServerSocketEventsHelper.subscribeRequestUnrootEvent(socket, () => {
             this.onRequestUnrootEvent(socket)
         })
+
+        ServerSocketEventsHelper.subscribeRequestLockProjectEvent(socket, projectNum => {
+            this.onRequestLockProjectEvent(socket, projectNum)
+        })
+
+        ServerSocketEventsHelper.subscribeRequestUnlockProjectEvent(socket, projectNum => {
+            this.onRequestUnlockProjectEvent(socket, projectNum)
+        })
     }
 
     private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
@@ -142,6 +150,36 @@ class Server {
         }
         ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
         ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.UNROOTED)
+    }
+
+    private onRequestLockProjectEvent = (socket: Socket, projectNum: number) => {
+        if (this.rootIds.includes(socket.id)) {
+            const lockTarget = this.projectPreviews.find(preview => preview.num == projectNum)
+            if (lockTarget) {
+                lockTarget.isOpen = false
+                ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.PROJECT_LOCKED)
+                this.projectSelectionDataReceivingSockets.forEach(socket => {
+                    ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
+                })
+            }
+        } else {
+            ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.PERMISSION_DENIED)
+        }
+    }
+
+    private onRequestUnlockProjectEvent = (socket: Socket, projectNum: number) => {
+        if (this.rootIds.includes(socket.id)) {
+            const unlockTarget = this.projectPreviews.find(preview => preview.num == projectNum)
+            if (unlockTarget) {
+                unlockTarget.isOpen = true
+                ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.PROJECT_UNLOCKED)
+                this.projectSelectionDataReceivingSockets.forEach(socket => {
+                    ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
+                })
+            }
+        } else {
+            ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.PERMISSION_DENIED)
+        }
     }
 
     private gameUpdateLoop = () => {

@@ -113,3 +113,19 @@ export class RootMessageEvent {
         return [rootMessage]
     }
 }
+
+export type RequestLockProjectEventCallback = (projectNum: number) => void
+export class RequestLockProjectEvent {
+    static readonly key = "request_lock_project"
+    static emitterParams(projectNum: number): any[] {
+        return [projectNum]
+    }
+}
+
+export type RequestUnlockProjectEventCallback = (projectNum: number) => void
+export class RequestUnlockProjectEvent {
+    static readonly key = "request_unlock_project"
+    static emitterParams(projectNum: number): any[] {
+        return [projectNum]
+    }
+}

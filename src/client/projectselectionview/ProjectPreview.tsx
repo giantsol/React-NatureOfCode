@@ -6,11 +6,15 @@ import CardActionArea from "@material-ui/core/CardActionArea"
 import CardMedia from "@material-ui/core/CardMedia"
 import CardContent from "@material-ui/core/CardContent"
 import Typography from "@material-ui/core/Typography"
+import {Button} from "@material-ui/core"
+import {ClientSocketEventsHelper} from "../ClientSocketEventsHelper"
 
 interface Props {
+    socket: SocketIOClient.Emitter
     num: number
     name: string
     isOpen: boolean
+    isRoot: boolean
 }
 
 export default class ProjectPreview extends React.Component<Props, any> {
@@ -35,6 +39,10 @@ export default class ProjectPreview extends React.Component<Props, any> {
                                 </CardContent>
                             </CardActionArea>
                         </Link>
+                        { this.props.isRoot ?
+                            <Button variant="contained" color="secondary" onClick={this.onClickLockButton}>Lock</Button>
+                            : null
+                        }
                     </Card>
                 </Grid>
             )
@@ -64,9 +72,21 @@ export default class ProjectPreview extends React.Component<Props, any> {
                                 LOCKED
                             </Typography>
                         </CardActionArea>
+                        { this.props.isRoot ?
+                            <Button variant="contained" color="primary" onClick={this.onClickUnlockButton}>Unlock</Button>
+                            : null
+                        }
                     </Card>
                 </Grid>
             )
         }
+    }
+
+    private onClickLockButton = () => {
+        ClientSocketEventsHelper.sendRequestLockProjectEvent(this.props.socket, this.props.num)
+    }
+
+    private onClickUnlockButton = () => {
+        ClientSocketEventsHelper.sendRequestUnlockProjectEvent(this.props.socket, this.props.num)
     }
 }

@@ -24,7 +24,11 @@ import {
     ProjectSelectionDataEvent,
     RequestRootEventCallback,
     RequestRootEvent,
-    RequestUnrootEventCallback, RequestUnrootEvent, RootMessageEvent
+    RequestUnrootEventCallback,
+    RequestUnrootEvent,
+    RootMessageEvent,
+    RequestLockProjectEvent,
+    RequestLockProjectEventCallback, RequestUnlockProjectEvent, RequestUnlockProjectEventCallback
 } from "../shared/SocketEvents"
 import {
     GameDataDTO,
@@ -98,4 +102,11 @@ export class ServerSocketEventsHelper {
         socket.emit(RootMessageEvent.key, ...RootMessageEvent.emitterParams(rootMessage))
     }
 
+    public static subscribeRequestLockProjectEvent(socket: Socket, callback: RequestLockProjectEventCallback): void {
+        socket.on(RequestLockProjectEvent.key, callback)
+    }
+
+    public static subscribeRequestUnlockProjectEvent(socket: Socket, callback: RequestUnlockProjectEventCallback): void {
+        socket.on(RequestUnlockProjectEvent.key, callback)
+    }
 }

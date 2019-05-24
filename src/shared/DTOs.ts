@@ -48,5 +48,8 @@ export interface ProjectPreviewDTO {
 export enum RootMessageDTO {
     ROOT_REQUEST_ACCEPTED,
     ROOT_REQUEST_DENIED,
-    UNROOTED
+    UNROOTED,
+    PROJECT_LOCKED,
+    PROJECT_UNLOCKED,
+    PERMISSION_DENIED
 }

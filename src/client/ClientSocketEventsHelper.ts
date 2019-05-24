@@ -9,7 +9,12 @@ import {
     PlayerLoggingInEvent,
     ProjectSelectionDataEvent,
     ProjectSelectionDataEventCallback,
-    RequestRootEvent, RequestUnrootEvent, RootMessageEvent, RootMessageEventCallback,
+    RequestLockProjectEvent,
+    RequestRootEvent,
+    RequestUnlockProjectEvent,
+    RequestUnrootEvent,
+    RootMessageEvent,
+    RootMessageEventCallback,
     StartReceivingGameDataEvent,
     StartReceivingProjectSelectionDataEvent,
     StopReceivingGameDataEvent,
@@ -99,5 +104,13 @@ export class ClientSocketEventsHelper {
 
     public static unsubscribeRootMessageEvent(socket: SocketIOClient.Emitter, callback: RootMessageEventCallback): void {
         socket.off(RootMessageEvent.key, callback)
+    }
+
+    public static sendRequestLockProjectEvent(socket: SocketIOClient.Emitter, projectNum: number): void {
+        socket.emit(RequestLockProjectEvent.key, ...RequestLockProjectEvent.emitterParams(projectNum))
+    }
+
+    public static sendRequestUnlockProjectEvent(socket: SocketIOClient.Emitter, projectNum: number): void {
+        socket.emit(RequestUnlockProjectEvent.key, ...RequestUnlockProjectEvent.emitterParams(projectNum))
     }
 }

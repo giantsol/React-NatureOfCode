@@ -52,6 +52,15 @@ class ProjectSelectionView extends React.Component<Props, State> {
             case RootMessageDTO.UNROOTED:
                 this.props.enqueueSnackbar("Unrooted", { variant: 'info', autoHideDuration: 1000 })
                 break
+            case RootMessageDTO.PROJECT_LOCKED:
+                this.props.enqueueSnackbar("Project locked", { variant: 'success', autoHideDuration: 1000 })
+                break
+            case RootMessageDTO.PROJECT_UNLOCKED:
+                this.props.enqueueSnackbar("Project unlocked", { variant: 'success', autoHideDuration: 1000 })
+                break
+            case RootMessageDTO.PERMISSION_DENIED:
+                this.props.enqueueSnackbar("Permission denied", { variant: 'error', autoHideDuration: 1000 })
+                break
         }
     }
 
@@ -78,7 +87,7 @@ class ProjectSelectionView extends React.Component<Props, State> {
                     </Grid>
                     {
                         this.state.projectPreviews.map((preview: ProjectPreviewDTO) =>
-                            <ProjectPreview key={preview.name} {...preview} />
+                            <ProjectPreview key={preview.name} {...preview} isRoot={this.state.isRoot} socket={this.props.socket} />
                         )
                     }
                     <Dialog
