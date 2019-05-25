@@ -1,38 +1,38 @@
 import React, {createRef} from 'react'
-import './BaseCanvas.css'
 
-export default abstract class BaseCanvas extends React.Component {
+export default abstract class BaseProject<P = {}, S = {}> extends React.Component<P, S> {
 
     private readonly canvasRef = createRef<HTMLCanvasElement>()
     private canvasContext: CanvasRenderingContext2D | null = null
+    private requestAnimationFrameHandler: number | null = null
 
     // 주기적인 clearRect에서 참조하므로 따로 멤버 변수로 선언
-    private width = 150
-    private height = 150
+    protected width = 150
+    protected height = 150
 
     constructor(props: any) {
         super(props)
-        // js의 this 문제때문에 필요 (window.requestAnimationFrame)
         this.onAnimationFrame = this.onAnimationFrame.bind(this);
     }
 
     render() {
         return (
-            <div>
-                <canvas ref={this.canvasRef} width={this.width} height={this.height}>
+            <React.Fragment>
+                <canvas ref={this.canvasRef} width={this.width} height={this.height}
+                        style={{width: "auto", height: "100vh", display: "block", margin: "auto", border: '1px solid black'}}
+                >
                     Fallback text for old browsers.
                 </canvas>
-            </div>
+            </React.Fragment>
         )
     }
 
     componentDidMount() {
         const canvas = this.canvasRef.current
-        // ts에서는 optional chaining이 안되므로 이런 식으로..
         this.canvasContext = canvas && canvas.getContext('2d')
         if (this.canvasContext) {
             this.setup()
-            window.requestAnimationFrame(this.onAnimationFrame)
+            this.requestAnimationFrameHandler = window.requestAnimationFrame(this.onAnimationFrame)
         }
     }
 
@@ -44,12 +44,15 @@ export default abstract class BaseCanvas extends React.Component {
             context.save()
             this.draw()
             context.restore()
-            window.requestAnimationFrame(this.onAnimationFrame)
+            this.requestAnimationFrameHandler = window.requestAnimationFrame(this.onAnimationFrame)
         }
     }
 
     componentWillUnmount() {
         this.canvasContext = null
+        if (this.requestAnimationFrameHandler) {
+            window.cancelAnimationFrame(this.requestAnimationFrameHandler)
+        }
     }
 
     /* Processing Methods */
@@ -143,17 +146,6 @@ export default abstract class BaseCanvas extends React.Component {
             context.moveTo(x1, y1)
             context.lineTo(x2, y2)
             context.stroke()
-        }
-    }
-
-    protected drawCanvasBorder(draw: boolean) {
-        const canvas = this.canvasRef.current
-        if (canvas) {
-            if (draw) {
-                canvas.style.border = '1px solid black'
-            } else {
-                canvas.style.border = '0px'
-            }
         }
     }
 
