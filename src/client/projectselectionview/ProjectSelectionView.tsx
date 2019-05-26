@@ -75,7 +75,7 @@ class ProjectSelectionView extends React.Component<Props, State> {
     render() {
         return (
             <React.Fragment>
-                <Grid container spacing={24}>
+                <Grid container spacing={4}>
                     <Grid item xs={12}>
                         { this.state.isRoot ?
                             <Button variant="contained" color="secondary" disableRipple={true}

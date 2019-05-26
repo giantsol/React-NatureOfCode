@@ -1,8 +1,20 @@
-import React, {createRef} from 'react'
+import React, {ChangeEvent, createRef} from 'react'
 import Utils from "../../shared/Utils"
 import p5 from "p5"
+import Slider from '@material-ui/lab/Slider'
 
-export default abstract class BaseProject<P = {}, S = {}> extends React.Component<P, S> {
+interface State {
+    sliderAttributes?: SliderAttributes
+    sliderValue: number
+}
+
+interface SliderAttributes {
+    min: number
+    max: number
+    step: number
+}
+
+export default abstract class BaseProject<P = {}, S extends State = State> extends React.Component<P, State> {
 
     private readonly canvasRef = createRef<HTMLCanvasElement>()
     private canvasContext: CanvasRenderingContext2D | null = null
@@ -12,12 +24,16 @@ export default abstract class BaseProject<P = {}, S = {}> extends React.Componen
     protected width = 150
     protected height = 150
 
-    constructor(props: any) {
+    private looping = true
+
+    constructor(props: P) {
         super(props)
         this.onAnimationFrame = this.onAnimationFrame.bind(this);
+        this.state = { sliderValue: 0 }
     }
 
     render() {
+        const { sliderAttributes, sliderValue } = this.state
         return (
             <React.Fragment>
                 <canvas ref={this.canvasRef} width={this.width} height={this.height}
@@ -25,8 +41,23 @@ export default abstract class BaseProject<P = {}, S = {}> extends React.Componen
                 >
                     Fallback text for old browsers.
                 </canvas>
+                { sliderAttributes ?
+                    <Slider value={sliderValue} min={sliderAttributes.min} max={sliderAttributes.max}
+                            step={sliderAttributes.step} onChange={this.onSliderChanged}
+                            style={{position: "absolute", bottom: "10%", width: "50%", left: "25%"}} />
+                    :
+                    null
+                }
             </React.Fragment>
         )
+    }
+
+    private onSliderChanged = (event: ChangeEvent<{}>, value: number) => {
+        this.setState({ sliderValue: value })
+
+        if (!this.requestAnimationFrameHandler) {
+            this.requestAnimationFrame()
+        }
     }
 
     componentDidMount() {
@@ -47,7 +78,12 @@ export default abstract class BaseProject<P = {}, S = {}> extends React.Componen
             context.save()
             this.draw()
             context.restore()
-            this.requestAnimationFrame()
+
+            if (this.looping) {
+                this.requestAnimationFrame()
+            } else {
+                this.cancelRequestAnimationFrame()
+            }
         }
     }
 
@@ -181,6 +217,25 @@ export default abstract class BaseProject<P = {}, S = {}> extends React.Componen
         if (context) {
             context.lineTo(x, y)
         }
+    }
+
+    protected noLoop() {
+        this.looping = false
+    }
+
+    protected loop() {
+        this.looping = true
+        if (!this.requestAnimationFrameHandler) {
+            this.requestAnimationFrame()
+        }
+    }
+
+    protected createSlider(min: number, max: number, defaultVal: number, step: number) {
+        this.setState({ sliderValue: defaultVal, sliderAttributes: {min, max, step} })
+    }
+
+    protected getSliderValue(): number {
+        return this.state.sliderValue
     }
 
     abstract setup(): void
