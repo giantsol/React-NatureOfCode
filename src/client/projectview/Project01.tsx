@@ -1,33 +1,43 @@
-import Victor from 'victor'
 import BaseProject from "./BaseProject"
+import p5 from "p5"
 
 interface Props {
     socket: SocketIOClient.Emitter
 }
 
+const TWO_PI = Math.PI * 2
+const p5p = p5.prototype
+
 export default class Project01 extends BaseProject<Props, any> {
-    private readonly position = new Victor(100, 100)
-    private readonly velocity = new Victor(2.5, 5)
 
     setup(): void {
         this.size(500, 500)
     }
 
     draw(): void {
-        const position = this.position
-        const velocity = this.velocity
-
-        position.add(velocity)
-
-        if ((position.x > this.width) || (position.x < 0)) {
-            velocity.x = velocity.x * -1
-        } else if ((position.y > this.height) || (position.y < 0)) {
-            velocity.y = velocity.y * -1
-        }
-
+        this.translate(this.width / 4, this.height / 2)
         this.stroke(0)
-        this.fill(175)
-        this.ellipse(position.x, position.y, 16, 16)
+        this.strokeWeight(2)
+        this.beginShape()
+        for (let a = 0; a < TWO_PI; a += 0.1) {
+            let r = 50
+            let x = r * Math.cos(a)
+            let y = r * Math.sin(a)
+            this.vertex(x, y)
+        }
+        this.endShape()
+
+        this.translate(this.width / 2, 0)
+        this.beginShape()
+        for (let a = 0; a < TWO_PI; a += 0.1) {
+            let xoff = p5p.map(Math.cos(a), -1, 1, 0, 2)
+            let yoff = p5p.map(Math.sin(a), -1, 1, 0, 2)
+            let r = p5p.map(p5p.noise(xoff, yoff), 0, 1, 40, 60)
+            let x = r * Math.cos(a)
+            let y = r * Math.sin(a)
+            this.vertex(x, y)
+        }
+        this.endShape()
     }
 
 }

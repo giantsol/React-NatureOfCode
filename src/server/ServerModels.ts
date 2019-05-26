@@ -1,5 +1,5 @@
-import {Utils} from "../shared/Utils"
 import {GameDataDTO, PlaceDTO, PlaceTypeDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
+import Utils from "../shared/Utils"
 
 export class ServerGameData implements GameDataDTO {
     readonly players: ServerPlayer[] = []

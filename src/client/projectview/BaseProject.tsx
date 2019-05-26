@@ -1,4 +1,6 @@
 import React, {createRef} from 'react'
+import Utils from "../../shared/Utils"
+import p5 from "p5"
 
 export default abstract class BaseProject<P = {}, S = {}> extends React.Component<P, S> {
 
@@ -32,7 +34,7 @@ export default abstract class BaseProject<P = {}, S = {}> extends React.Componen
         this.canvasContext = canvas && canvas.getContext('2d')
         if (this.canvasContext) {
             this.setup()
-            this.requestAnimationFrameHandler = window.requestAnimationFrame(this.onAnimationFrame)
+            this.requestAnimationFrame()
         }
     }
 
@@ -41,17 +43,27 @@ export default abstract class BaseProject<P = {}, S = {}> extends React.Componen
         if (context) {
             // clear canvas
             context.clearRect(0, 0, this.width, this.height)
+            p5.prototype.noiseSeed(Utils.randInt(0, 1000))
             context.save()
             this.draw()
             context.restore()
-            this.requestAnimationFrameHandler = window.requestAnimationFrame(this.onAnimationFrame)
+            this.requestAnimationFrame()
         }
     }
 
     componentWillUnmount() {
         this.canvasContext = null
+        this.cancelRequestAnimationFrame()
+    }
+
+    private requestAnimationFrame() {
+        this.requestAnimationFrameHandler = window.requestAnimationFrame(this.onAnimationFrame)
+    }
+
+    private cancelRequestAnimationFrame() {
         if (this.requestAnimationFrameHandler) {
             window.cancelAnimationFrame(this.requestAnimationFrameHandler)
+            this.requestAnimationFrameHandler = null
         }
     }
 
@@ -146,6 +158,28 @@ export default abstract class BaseProject<P = {}, S = {}> extends React.Componen
             context.moveTo(x1, y1)
             context.lineTo(x2, y2)
             context.stroke()
+        }
+    }
+
+    protected beginShape() {
+        const context = this.canvasContext
+        if (context) {
+            context.beginPath()
+        }
+    }
+
+    protected endShape() {
+        const context = this.canvasContext
+        if (context) {
+            context.closePath()
+            context.stroke()
+        }
+    }
+
+    protected vertex(x: number, y: number) {
+        const context = this.canvasContext
+        if (context) {
+            context.lineTo(x, y)
         }
     }
 
