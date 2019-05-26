@@ -13,7 +13,8 @@ export default class Project01 extends BaseProject<Props> {
     setup(): void {
         this.size(500, 500)
         this.createSlider(0, 10, 0, 1)
-        this.createButton('Next Frame', this.drawNextFrame)
+        // this.createButton('Next Frame', this.drawNextFrame)
+        this.maxFrameRate(10)
     }
 
     draw(): void {
@@ -25,7 +26,7 @@ export default class Project01 extends BaseProject<Props> {
         this.beginShape()
         for (let a = 0; a < TWO_PI; a += 0.1) {
             let r
-            if (noiseMax == 0) {
+            if (noiseMax === 0) {
                 r = 50
             } else {
                 r = p5p.map(Math.random(), 0, 1, 40, 80)
@@ -43,7 +44,7 @@ export default class Project01 extends BaseProject<Props> {
         this.beginShape()
         for (let a = 0; a < TWO_PI; a += 0.1) {
             let r
-            if (noiseMax == 0) {
+            if (noiseMax === 0) {
                 r = 50
             } else {
                 const xoff = p5p.map(Math.cos(a), -1, 1, 0, noiseMax)
@@ -58,7 +59,7 @@ export default class Project01 extends BaseProject<Props> {
             this.vertex(x, y)
         }
         this.endShape()
-        this.noLoop()
+        // this.noLoop()
     }
 
 }

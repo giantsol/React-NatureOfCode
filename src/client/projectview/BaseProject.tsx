@@ -23,6 +23,13 @@ interface ButtonAttributes {
 
 export default abstract class BaseProject<P = {}, S extends State = State> extends React.Component<P, State> {
 
+    // framerate 관련 변수들
+    private fps = 60
+    private now = 0
+    private then = Date.now()
+    private interval = 1000 / this.fps
+    private delta: number = 0
+
     private readonly canvasRef = createRef<HTMLCanvasElement>()
     private canvasContext: CanvasRenderingContext2D | null = null
     private requestAnimationFrameHandler: number | null = null
@@ -85,12 +92,20 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
     private onAnimationFrame() {
         const context = this.canvasContext
         if (context) {
-            // clear canvas
-            context.clearRect(0, 0, this.width, this.height)
-            p5.prototype.noiseSeed(Utils.randInt(0, 1000))
-            context.save()
-            this.draw()
-            context.restore()
+            // framerate 관련 로직
+            this.now = Date.now()
+            this.delta = this.now - this.then
+
+            if (this.delta > this.interval) {
+                this.then = this.now - (this.delta % this.interval)
+
+                p5.prototype.noiseSeed(Utils.randInt(0, 1000))
+                // clear canvas
+                context.clearRect(0, 0, this.width, this.height)
+                context.save()
+                this.draw()
+                context.restore()
+            }
 
             if (this.looping) {
                 this.requestAnimationFrame()
@@ -257,6 +272,27 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
 
     protected createButton(text: string, clickCallback: () => void) {
         this.setState({ buttonAttributes: {text, clickCallback}})
+    }
+
+    protected getImageData(left: number, top: number, width: number, height: number): ImageData | null {
+        const context = this.canvasContext
+        if (context) {
+            return context.getImageData(left, top, width, height)
+        } else {
+            return null
+        }
+    }
+
+    protected updateImageData(imageData: ImageData, left: number, top: number) {
+        const context = this.canvasContext
+        if (context) {
+            context.putImageData(imageData, left, top)
+        }
+    }
+
+    protected maxFrameRate(fps: number) {
+        this.fps = fps
+        this.interval = 1000 / fps
     }
 
     abstract setup(): void
