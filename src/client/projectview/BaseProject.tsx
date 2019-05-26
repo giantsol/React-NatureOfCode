@@ -21,7 +21,40 @@ interface ButtonAttributes {
     clickCallback: () => void
 }
 
-export default abstract class BaseProject<P = {}, S extends State = State> extends React.Component<P, State> {
+export interface ProcessingMethods {
+    width: number
+    height: number
+    size(width: number, height: number): void
+    background(color: number): void
+    stroke(color: number): void
+    strokeWeight(weight: number): void
+    fill(color: number): void
+    noFill(): void
+    ellipse(x: number, y: number, width: number, height: number): void
+    translate(x: number, y: number): void
+    rotate(radian: number): void
+    line(x1: number, y1: number, x2: number, y2: number): void
+    beginShape(): void
+    endShape(): void
+    vertex(x: number, y: number): void
+    noLoop(): void
+    loop(): void
+    drawNextFrame(): void
+    createSlider(min: number, max: number, defaultVal: number, step: number): void
+    getSliderValue(): number
+    createButton(text: string, clickCallback: () => void): void
+    getImageData(left: number, top: number, width: number, height: number): ImageData | null
+    updateImageData(imageData: ImageData, left: number, top: number): void
+    maxFrameRate(fps: number): void
+    setup(): void
+    draw(): void
+    onKeyPressed(event: KeyboardEvent): void
+    onKeyReleased(event: KeyboardEvent): void
+    triangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): void
+}
+
+export default abstract class BaseProject<P = {}, S extends State = State> extends React.Component<P, State>
+    implements ProcessingMethods {
 
     // framerate 관련 변수들
     private fps = 60
@@ -35,8 +68,8 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
     private requestAnimationFrameHandler: number | null = null
 
     // 주기적인 clearRect에서 참조하므로 따로 멤버 변수로 선언
-    protected width = 150
-    protected height = 150
+    width = 150
+    height = 150
 
     private looping = true
 
@@ -45,7 +78,10 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         this.onAnimationFrame = this.onAnimationFrame.bind(this);
         this.state = { sliderValue: 0 }
 
+        this.onSliderChanged = this.onSliderChanged.bind(this)
         this.drawNextFrame = this.drawNextFrame.bind(this)
+        this.onKeyPressed = this.onKeyPressed.bind(this)
+        this.onKeyReleased = this.onKeyReleased.bind(this)
     }
 
     render() {
@@ -74,7 +110,7 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         )
     }
 
-    private onSliderChanged = (event: ChangeEvent<{}>, value: number) => {
+    private onSliderChanged(event: ChangeEvent<{}>, value: number): void {
         this.setState({ sliderValue: value })
 
         this.drawNextFrame()
@@ -86,7 +122,18 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         if (this.canvasContext) {
             this.setup()
             this.requestAnimationFrame()
+
+            document.addEventListener('keydown', this.onKeyPressed)
+            document.addEventListener('keyup', this.onKeyReleased)
         }
+    }
+
+    onKeyPressed(event: KeyboardEvent): void {
+
+    }
+
+    onKeyReleased(event: KeyboardEvent): void {
+
     }
 
     private onAnimationFrame() {
@@ -118,6 +165,9 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
     componentWillUnmount() {
         this.canvasContext = null
         this.cancelRequestAnimationFrame()
+
+        document.removeEventListener('keydown', this.onKeyPressed)
+        document.removeEventListener('keyup', this.onKeyReleased)
     }
 
     private requestAnimationFrame() {
@@ -133,7 +183,7 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
 
     /* Processing Methods */
 
-    protected size(width: number, height: number) {
+    size(width: number, height: number) {
         const canvas = this.canvasRef.current
         if (canvas) {
             canvas.width = width
@@ -143,10 +193,10 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
-    protected background(color: number): void;
-    protected background(r: number, g: number, b: number): void;
-    protected background(r: number, g: number, b: number, a: number): void;
-    protected background(r: number, g?: number, b?: number, a: number = 1.0) {
+    background(color: number): void;
+    background(r: number, g: number, b: number): void;
+    background(r: number, g: number, b: number, a: number): void;
+    background(r: number, g?: number, b?: number, a: number = 1.0) {
         const context = this.canvasContext
         if (context) {
             const prevFillStyle = context.fillStyle
@@ -162,28 +212,35 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
-    protected stroke(color: number) {
+    stroke(color: number) {
         const context = this.canvasContext
         if (context) {
             context.strokeStyle = `rgb(${color}, ${color}, ${color})`
         }
     }
 
-    protected strokeWeight(weight: number) {
+    strokeWeight(weight: number) {
         const context = this.canvasContext
         if (context) {
             context.lineWidth = weight
         }
     }
 
-    protected fill(color: number) {
+    fill(color: number) {
         const context = this.canvasContext
         if (context) {
             context.fillStyle = `rgb(${color}, ${color}, ${color})`
         }
     }
 
-    protected ellipse(x: number, y: number, width: number, height: number) {
+    noFill() {
+        const context = this.canvasContext
+        if (context) {
+            context.fillStyle = 'rgba(0,0,0,0)'
+        }
+    }
+
+    ellipse(x: number, y: number, width: number, height: number) {
         const context = this.canvasContext
         if (context) {
             context.beginPath()
@@ -193,29 +250,21 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
-    protected getWidth(): number {
-        return this.width
-    }
-
-    protected getHeight(): number {
-        return this.height
-    }
-
-    protected translate(x: number, y: number) {
+    translate(x: number, y: number) {
         const context = this.canvasContext
         if (context) {
             context.translate(x, y)
         }
     }
 
-    protected rotate(radian: number) {
+    rotate(radian: number) {
         const context = this.canvasContext
         if (context) {
             context.rotate(radian)
         }
     }
 
-    protected line(x1: number, y1: number, x2: number, y2: number) {
+    line(x1: number, y1: number, x2: number, y2: number) {
         const context = this.canvasContext
         if (context) {
             context.beginPath()
@@ -225,56 +274,57 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
-    protected beginShape() {
+    beginShape() {
         const context = this.canvasContext
         if (context) {
             context.beginPath()
         }
     }
 
-    protected endShape() {
+    endShape() {
         const context = this.canvasContext
         if (context) {
             context.closePath()
             context.stroke()
+            context.fill()
         }
     }
 
-    protected vertex(x: number, y: number) {
+    vertex(x: number, y: number) {
         const context = this.canvasContext
         if (context) {
             context.lineTo(x, y)
         }
     }
 
-    protected noLoop() {
+    noLoop() {
         this.looping = false
     }
 
-    protected loop() {
+    loop() {
         this.looping = true
         this.drawNextFrame()
     }
 
-    protected drawNextFrame() {
+    drawNextFrame() {
         if (!this.requestAnimationFrameHandler) {
             this.requestAnimationFrame()
         }
     }
 
-    protected createSlider(min: number, max: number, defaultVal: number, step: number) {
+    createSlider(min: number, max: number, defaultVal: number, step: number) {
         this.setState({ sliderValue: defaultVal, sliderAttributes: {min, max, step} })
     }
 
-    protected getSliderValue(): number {
+    getSliderValue(): number {
         return this.state.sliderValue
     }
 
-    protected createButton(text: string, clickCallback: () => void) {
+    createButton(text: string, clickCallback: () => void) {
         this.setState({ buttonAttributes: {text, clickCallback}})
     }
 
-    protected getImageData(left: number, top: number, width: number, height: number): ImageData | null {
+    getImageData(left: number, top: number, width: number, height: number): ImageData | null {
         const context = this.canvasContext
         if (context) {
             return context.getImageData(left, top, width, height)
@@ -283,16 +333,29 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
-    protected updateImageData(imageData: ImageData, left: number, top: number) {
+    updateImageData(imageData: ImageData, left: number, top: number) {
         const context = this.canvasContext
         if (context) {
             context.putImageData(imageData, left, top)
         }
     }
 
-    protected maxFrameRate(fps: number) {
+    maxFrameRate(fps: number) {
         this.fps = fps
         this.interval = 1000 / fps
+    }
+
+    triangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): void {
+        const context = this.canvasContext
+        if (context) {
+            context.beginPath()
+            context.moveTo(x1, y1)
+            context.lineTo(x2, y2)
+            context.lineTo(x3, y3)
+            context.closePath()
+            context.stroke()
+            context.fill()
+        }
     }
 
     abstract setup(): void

@@ -26,7 +26,8 @@ class Server {
     private readonly projectPreviews = [
         { num: 1, name: "First", isOpen: true },
         { num: 2, name: "Second", isOpen: true },
-        { num: 3, name: "Third", isOpen: false }
+        { num: 3, name: "Third", isOpen: false },
+        { num: 4, name: "Fourth", isOpen: true }
     ]
     private rootIds: string[] = []
 
