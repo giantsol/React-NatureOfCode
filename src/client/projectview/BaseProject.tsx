@@ -2,16 +2,23 @@ import React, {ChangeEvent, createRef} from 'react'
 import Utils from "../../shared/Utils"
 import p5 from "p5"
 import Slider from '@material-ui/lab/Slider'
+import {Button} from "@material-ui/core"
 
 interface State {
     sliderAttributes?: SliderAttributes
     sliderValue: number
+    buttonAttributes?: ButtonAttributes
 }
 
 interface SliderAttributes {
     min: number
     max: number
     step: number
+}
+
+interface ButtonAttributes {
+    text: string
+    clickCallback: () => void
 }
 
 export default abstract class BaseProject<P = {}, S extends State = State> extends React.Component<P, State> {
@@ -30,34 +37,40 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         super(props)
         this.onAnimationFrame = this.onAnimationFrame.bind(this);
         this.state = { sliderValue: 0 }
+
+        this.drawNextFrame = this.drawNextFrame.bind(this)
     }
 
     render() {
-        const { sliderAttributes, sliderValue } = this.state
+        const { sliderAttributes, sliderValue, buttonAttributes } = this.state
         return (
-            <React.Fragment>
+            <div style={{width: "100vh", height: "100vh", margin: "auto", position: "relative"}}>
                 <canvas ref={this.canvasRef} width={this.width} height={this.height}
-                        style={{width: "auto", height: "100vh", display: "block", margin: "auto", border: '1px solid black'}}
+                        style={{width: "100%", height: "100%", display: "block", border: '1px solid black'}}
                 >
                     Fallback text for old browsers.
                 </canvas>
                 { sliderAttributes ?
                     <Slider value={sliderValue} min={sliderAttributes.min} max={sliderAttributes.max}
                             step={sliderAttributes.step} onChange={this.onSliderChanged}
-                            style={{position: "absolute", bottom: "10%", width: "50%", left: "25%"}} />
-                    :
-                    null
+                            style={{position: "absolute", width: "50%", bottom: "10%", left: "50%", transform: "translate(-50%, -50%)"}} />
+                    : null
                 }
-            </React.Fragment>
+                { buttonAttributes ?
+                    <Button variant="contained" onClick={buttonAttributes.clickCallback} disableRipple={true}
+                            style={{position: "absolute", top: "10%", right: "5%", transform: "translate(-50%, -50%)"}} >
+                        {buttonAttributes.text}
+                    </Button>
+                    : null
+                }
+            </div>
         )
     }
 
     private onSliderChanged = (event: ChangeEvent<{}>, value: number) => {
         this.setState({ sliderValue: value })
 
-        if (!this.requestAnimationFrameHandler) {
-            this.requestAnimationFrame()
-        }
+        this.drawNextFrame()
     }
 
     componentDidMount() {
@@ -225,6 +238,10 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
 
     protected loop() {
         this.looping = true
+        this.drawNextFrame()
+    }
+
+    protected drawNextFrame() {
         if (!this.requestAnimationFrameHandler) {
             this.requestAnimationFrame()
         }
@@ -236,6 +253,10 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
 
     protected getSliderValue(): number {
         return this.state.sliderValue
+    }
+
+    protected createButton(text: string, clickCallback: () => void) {
+        this.setState({ buttonAttributes: {text, clickCallback}})
     }
 
     abstract setup(): void

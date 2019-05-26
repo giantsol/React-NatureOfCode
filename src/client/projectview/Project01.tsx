@@ -13,6 +13,7 @@ export default class Project01 extends BaseProject<Props> {
     setup(): void {
         this.size(500, 500)
         this.createSlider(0, 10, 0, 1)
+        this.createButton('Next Frame', this.drawNextFrame)
     }
 
     draw(): void {
