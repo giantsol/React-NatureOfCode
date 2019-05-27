@@ -35,6 +35,13 @@ class GameView extends React.Component<Props, State> {
     }
     private inputProcessingLoopHandler: NodeJS.Timeout | null = null
 
+    // framerate 관련 변수들
+    private fps = 60
+    private now = 0
+    private then = Date.now()
+    private interval = 1000 / this.fps
+    private delta: number = 0
+
     constructor(props: Props) {
         super(props)
         this.state = { myId: null }
@@ -147,8 +154,16 @@ class GameView extends React.Component<Props, State> {
         const ctx = this.canvasContext
         const gameData = this.currentGameData
         if (ctx && gameData) {
-            gameData.draw(ctx, this.state.myId)
-            this.updateCanvasSizeIfChanged(gameData)
+            // framerate 관련 로직
+            this.now = Date.now()
+            this.delta = this.now - this.then
+
+            if (this.delta > this.interval) {
+                this.then = this.now - (this.delta % this.interval)
+
+                gameData.draw(ctx, this.state.myId)
+                this.updateCanvasSizeIfChanged(gameData)
+            }
         }
 
         this.requestAnimationFrameHandler = window.requestAnimationFrame(this.onAnimationFrame)
