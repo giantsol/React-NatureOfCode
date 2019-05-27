@@ -44,6 +44,8 @@ class Ship {
     private heading = 0
     private rotation = 0
     private velocity = p5p.createVector(0, 0)
+    private acceleration = p5p.createVector(0, 0)
+    private boostingForce = p5p.createVector(0, 0)
     private isBoosting = false
 
     constructor(p5: ProcessingMethods) {
@@ -59,6 +61,15 @@ class Ship {
         p5.noFill()
         p5.stroke(0)
         p5.triangle(-r, r, r, r, 0, -r)
+
+        p5.setDebugText(
+            `Force x: ${Number(this.boostingForce.x.toPrecision(2))}, y: ${Number(this.boostingForce.y.toPrecision(2))}
+            Acceleration x: ${Number(this.acceleration.x.toPrecision(2))}, y: ${Number(this.acceleration.y.toPrecision(2))}
+            Velocity x: ${Number(this.velocity.x.toPrecision(2))}, y: ${Number(this.velocity.y.toPrecision(2))}
+            `
+        )
+
+        this.acceleration.mult(0)
     }
 
     setRotation(a: number): void {
@@ -69,22 +80,23 @@ class Ship {
         this.heading += this.rotation
 
         if (this.isBoosting) {
-            this.boost()
+            this.boostingForce = this.getBoostingForce()
+        } else {
+            this.boostingForce.mult(0)
         }
-        this.edges()
+        this.acceleration.add(this.boostingForce)
+        this.velocity.add(this.acceleration)
         this.pos.add(this.velocity)
 
-        this.velocity.mult(0.98)
+        this.edges()
     }
 
     boosting(b: boolean): void {
         this.isBoosting = b
     }
 
-    boost(): void {
-        const force = p5.Vector.fromAngle(this.heading)
-        force.mult(0.1)
-        this.velocity.add(force)
+    getBoostingForce(): p5.Vector {
+        return p5.Vector.mult(p5.Vector.fromAngle(this.heading), 0.1)
     }
 
     edges(): void {

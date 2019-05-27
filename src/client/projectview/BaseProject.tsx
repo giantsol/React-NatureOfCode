@@ -3,11 +3,13 @@ import Utils from "../../shared/Utils"
 import p5 from "p5"
 import Slider from '@material-ui/lab/Slider'
 import {Button} from "@material-ui/core"
+import Typography from "@material-ui/core/Typography"
 
 interface State {
     sliderAttributes?: SliderAttributes
     sliderValue: number
     buttonAttributes?: ButtonAttributes
+    debugText?: string
 }
 
 interface SliderAttributes {
@@ -51,6 +53,7 @@ export interface ProcessingMethods {
     onKeyPressed(event: KeyboardEvent): void
     onKeyReleased(event: KeyboardEvent): void
     triangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): void
+    setDebugText(text: string): void
 }
 
 export default abstract class BaseProject<P = {}, S extends State = State> extends React.Component<P, State>
@@ -85,7 +88,7 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
     }
 
     render() {
-        const { sliderAttributes, sliderValue, buttonAttributes } = this.state
+        const { sliderAttributes, sliderValue, buttonAttributes, debugText } = this.state
         return (
             <div style={{width: "100vh", height: "100vh", margin: "auto", position: "relative"}}>
                 <canvas ref={this.canvasRef} width={this.width} height={this.height}
@@ -104,6 +107,12 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
                             style={{position: "absolute", top: "10%", right: "5%", transform: "translate(-50%, -50%)"}} >
                         {buttonAttributes.text}
                     </Button>
+                    : null
+                }
+                { debugText ?
+                    <Typography variant="body2"
+                                style={{position: "absolute", top: "10%", left: "5%", whiteSpace: "pre-line"}}
+                    >{debugText}</Typography>
                     : null
                 }
             </div>
@@ -356,6 +365,10 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
             context.stroke()
             context.fill()
         }
+    }
+
+    setDebugText(text: string): void {
+        this.setState({debugText: text})
     }
 
     abstract setup(): void
