@@ -1,5 +1,6 @@
-import BaseProject, {ProcessingMethods} from "./BaseProject"
+import BaseProject from "./BaseProject"
 import * as p5 from "p5"
+import CustomP5Methods from "../CustomP5Methods"
 
 const p5p = p5.prototype
 const HALF_PI = Math.PI / 2
@@ -38,7 +39,7 @@ export default class Project04 extends BaseProject {
 }
 
 class Ship {
-    private readonly p5: ProcessingMethods
+    private readonly p5: CustomP5Methods
     private pos: p5.Vector
     private radius = 20
     private heading = 0
@@ -48,7 +49,7 @@ class Ship {
     private boostingForce = p5p.createVector(0, 0)
     private isBoosting = false
 
-    constructor(p5: ProcessingMethods) {
+    constructor(p5: CustomP5Methods) {
         this.p5 = p5
         this.pos = p5p.createVector(p5.width / 2, p5.height / 2)
     }

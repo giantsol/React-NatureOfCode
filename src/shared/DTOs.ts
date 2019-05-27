@@ -11,13 +11,13 @@ export interface PlayerDTO {
     x: number
     y: number
     size: number
+    heading: number
 }
 
 export interface PlayerInputDTO {
     left: boolean
     right: boolean
     up: boolean
-    down: boolean
 }
 
 export interface PlaceDTO {

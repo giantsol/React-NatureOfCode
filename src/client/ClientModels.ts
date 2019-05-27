@@ -1,46 +1,53 @@
 import {GameDataDTO, PlaceDTO, PlaceTypeDTO, PlayerDTO} from "../shared/DTOs"
+import CustomP5Methods from "./CustomP5Methods"
+
+const HALF_PI = Math.PI / 2
 
 export class ClientPlayer implements PlayerDTO {
     static readonly meColor = `rgb(255, 0, 0)`
-    static readonly othersColor = `rgb(0, 0, 0)`
+    static readonly othersColor = `rgb(255, 255, 255)`
 
     readonly id: string
     readonly name: string
+    size: number
+    heading: number
     x: number
     y: number
-    size: number
 
-    constructor(data: PlayerDTO) {
+    private readonly cp5: CustomP5Methods
+
+    constructor(data: PlayerDTO, cp5: CustomP5Methods) {
         this.id = data.id
         this.name = data.name
+        this.size = data.size
+        this.heading = data.heading
         this.x = data.x
         this.y = data.y
-        this.size = data.size
+        this.cp5 = cp5
     }
 
     update(newData: PlayerDTO): void {
         this.x = newData.x
         this.y = newData.y
         this.size = newData.size
+        this.heading = newData.heading
     }
 
     draw(ctx: CanvasRenderingContext2D, isMe: boolean): void {
-        const x = this.x
-        const y = this.y
-        const size = this.size
-
-        const prevFillStyle = ctx.fillStyle
+        const p5 = this.cp5
+        const r = this.size
+        p5.save()
+        p5.translate(this.x, this.y)
+        p5.rotate(this.heading - HALF_PI)
         if (isMe) {
-            ctx.fillStyle = ClientPlayer.meColor
+            p5.fill(255, 0, 0)
+            p5.stroke(255, 0, 0)
         } else {
-            ctx.fillStyle = ClientPlayer.othersColor
+            p5.fill(255)
+            p5.stroke(255)
         }
-        ctx.beginPath()
-        ctx.ellipse(x, y, size, size, 0, 0, 360)
-        ctx.stroke()
-        ctx.fill()
-
-        ctx.fillStyle = prevFillStyle
+        p5.triangle(-r, r, r, r, 0, -r)
+        p5.restore()
     }
 }
 
@@ -50,15 +57,15 @@ export class ClientGameData implements GameDataDTO {
     canvasHeight: number = 0
     canvasWidth: number = 0
 
-    update(newData: GameDataDTO): void {
-        this.updatePlayers(newData.players)
+    update(newData: GameDataDTO, cp5: CustomP5Methods): void {
+        this.updatePlayers(newData.players, cp5)
         this.updatePlaces(newData.places)
 
         this.canvasWidth = newData.canvasWidth
         this.canvasHeight = newData.canvasHeight
     }
 
-    private updatePlayers(newPlayersData: PlayerDTO[]) {
+    private updatePlayers(newPlayersData: PlayerDTO[], cp5: CustomP5Methods) {
         const players = this.players
         let i = players.length
 
@@ -76,7 +83,7 @@ export class ClientGameData implements GameDataDTO {
         }
 
         for (let newPlayerData of newPlayersData) {
-            players.push(new ClientPlayer(newPlayerData))
+            players.push(new ClientPlayer(newPlayerData, cp5))
         }
     }
 
@@ -98,6 +105,11 @@ export class ClientGameData implements GameDataDTO {
 
     draw(ctx: CanvasRenderingContext2D, myId: string | null): void {
         ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
+
+        const prevFillStyle = ctx.fillStyle
+        ctx.fillStyle = 'rgb(0,0,0)'
+        ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight)
+        ctx.fillStyle = prevFillStyle
 
         for (let place of this.places) {
             place.draw(ctx)

@@ -4,6 +4,8 @@ import p5 from "p5"
 import Slider from '@material-ui/lab/Slider'
 import {Button} from "@material-ui/core"
 import Typography from "@material-ui/core/Typography"
+import CustomP5Methods from "../CustomP5Methods"
+import CustomP5Callbacks from "../CustomP5Callbacks"
 
 interface State {
     sliderAttributes?: SliderAttributes
@@ -23,41 +25,8 @@ interface ButtonAttributes {
     clickCallback: () => void
 }
 
-export interface ProcessingMethods {
-    width: number
-    height: number
-    size(width: number, height: number): void
-    background(color: number): void
-    stroke(color: number): void
-    strokeWeight(weight: number): void
-    fill(color: number): void
-    noFill(): void
-    ellipse(x: number, y: number, width: number, height: number): void
-    translate(x: number, y: number): void
-    rotate(radian: number): void
-    line(x1: number, y1: number, x2: number, y2: number): void
-    beginShape(): void
-    endShape(): void
-    vertex(x: number, y: number): void
-    noLoop(): void
-    loop(): void
-    drawNextFrame(): void
-    createSlider(min: number, max: number, defaultVal: number, step: number): void
-    getSliderValue(): number
-    createButton(text: string, clickCallback: () => void): void
-    getImageData(left: number, top: number, width: number, height: number): ImageData | null
-    updateImageData(imageData: ImageData, left: number, top: number): void
-    maxFrameRate(fps: number): void
-    setup(): void
-    draw(): void
-    onKeyPressed(event: KeyboardEvent): void
-    onKeyReleased(event: KeyboardEvent): void
-    triangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): void
-    setDebugText(text: string): void
-}
-
 export default abstract class BaseProject<P = {}, S extends State = State> extends React.Component<P, State>
-    implements ProcessingMethods {
+    implements CustomP5Methods, CustomP5Callbacks {
 
     // framerate 관련 변수들
     private fps = 60
@@ -210,7 +179,7 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         if (context) {
             const prevFillStyle = context.fillStyle
 
-            if (g && b) {
+            if (g !== undefined && b !== undefined) {
                 context.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`
             } else {
                 context.fillStyle = `rgba(${r}, ${r}, ${r}, ${a})`
@@ -221,10 +190,17 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
-    stroke(color: number) {
+    stroke(color: number): void;
+    stroke(r: number, g: number, b: number): void;
+    stroke(r: number, g: number, b: number, a: number): void;
+    stroke(r: number, g?: number, b?: number, a: number = 1.0) {
         const context = this.canvasContext
         if (context) {
-            context.strokeStyle = `rgb(${color}, ${color}, ${color})`
+            if (g !== undefined && b !== undefined) {
+                context.strokeStyle = `rgba(${r}, ${g}, ${b}, ${a})`
+            } else {
+                context.strokeStyle = `rgba(${r}, ${r}, ${r}, ${a})`
+            }
         }
     }
 
@@ -235,10 +211,17 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
-    fill(color: number) {
+    fill(color: number): void;
+    fill(r: number, g: number, b: number): void;
+    fill(r: number, g: number, b: number, a: number): void;
+    fill(r: number, g?: number, b?: number, a: number = 1.0) {
         const context = this.canvasContext
         if (context) {
-            context.fillStyle = `rgb(${color}, ${color}, ${color})`
+            if (g !== undefined && b !== undefined) {
+                context.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`
+            } else {
+                context.fillStyle = `rgba(${r}, ${r}, ${r}, ${a})`
+            }
         }
     }
 
@@ -370,6 +353,21 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
     setDebugText(text: string): void {
         this.setState({debugText: text})
     }
+
+    restore(): void {
+        const context = this.canvasContext
+        if (context) {
+            context.restore()
+        }
+    }
+
+    save(): void {
+        const context = this.canvasContext
+        if (context) {
+            context.save()
+        }
+    }
+
 
     abstract setup(): void
     abstract draw(): void

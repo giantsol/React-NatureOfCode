@@ -1,11 +1,14 @@
 import {GameDataDTO, PlaceDTO, PlaceTypeDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
 import Utils from "../shared/Utils"
+import Victor = require("victor")
+
+const HALF_PI = Math.PI / 2
 
 export class ServerGameData implements GameDataDTO {
     readonly players: ServerPlayer[] = []
     readonly places: ServerPlace[]
-    readonly canvasHeight: number = 1000
-    readonly canvasWidth: number = 1000
+    readonly canvasHeight: number = 2000
+    readonly canvasWidth: number = 2000
 
     constructor() {
         this.places = [
@@ -17,9 +20,8 @@ export class ServerGameData implements GameDataDTO {
     }
 
     addNewPlayer(newPlayer: ServerPlayer): void {
-        newPlayer.x = Utils.randInt(0, this.canvasWidth)
-        newPlayer.y = Utils.randInt(0, this.canvasHeight)
-        newPlayer.size = Utils.randInt(5, 10)
+        newPlayer.setPos(this.canvasWidth / 2, this.canvasHeight / 2)
+        newPlayer.size = Utils.randInt(12, 15)
         this.players.push(newPlayer)
     }
 
@@ -41,35 +43,92 @@ export class ServerGameData implements GameDataDTO {
             player.applyInput(playerInput)
         }
     }
+
+    update(): void {
+        const width = this.canvasWidth
+        const height = this.canvasHeight
+        this.players.forEach(value => value.update(width, height))
+    }
 }
 
 export class ServerPlayer implements PlayerDTO {
     readonly id: string
     readonly name: string
-    x: number = 0
-    y: number = 0
+    private pos: Victor = new Victor(0, 0)
     size: number = 0
+    heading: number = HALF_PI
+    x: number = this.pos.x
+    y: number = this.pos.y
+
+    private rotation = 0
+    private velocity = new Victor(0, 0)
+    private acceleration = new Victor(0, 0)
+    private boostingForce = new Victor(0, 0)
+    private isBoosting = false
 
     constructor(id: string, name: string) {
         this.id = id
         this.name = name
     }
 
-    applyInput(playerInput: PlayerInputDTO): void {
-        if (playerInput.up) {
-            this.y -= 1
-        }
+    setPos(x: number, y: number): void {
+        this.pos.x = x
+        this.pos.y = y
+        this.x = x
+        this.y = y
+    }
 
-        if (playerInput.down) {
-            this.y += 1
-        }
+    applyInput(playerInput: PlayerInputDTO): void {
+        this.isBoosting = playerInput.up
 
         if (playerInput.left) {
-            this.x -= 1
+            this.rotation = -0.1
+        } else if (playerInput.right) {
+            this.rotation = 0.1
+        } else if (!playerInput.left && !playerInput.right) {
+            this.rotation = 0
+        }
+    }
+
+    update(width: number, height: number): void {
+        this.heading += this.rotation
+
+        this.updateBoostingForce(this.isBoosting)
+        this.acceleration.add(this.boostingForce)
+        this.velocity.add(this.acceleration)
+        this.velocity.multiplyScalar(0.98)
+        this.pos.add(this.velocity)
+        this.x = this.pos.x
+        this.y = this.pos.y
+
+        this.edges(width, height)
+
+        this.acceleration.multiplyScalar(0)
+    }
+
+    private updateBoostingForce(isBoosting: boolean): void {
+        if (isBoosting) {
+            this.boostingForce.addScalar(5).rotateBy(this.heading + HALF_PI).normalize()
+            this.boostingForce.multiplyScalar(0.1)
+        } else {
+            this.boostingForce.multiplyScalar(0)
+        }
+    }
+
+    private edges(width: number, height: number): void {
+        const pos = this.pos
+        const r = this.size
+
+        if (pos.x > width + r) {
+            pos.x = -r
+        } else if (pos.x < -r) {
+            pos.x = width + r
         }
 
-        if (playerInput.right) {
-            this.x += 1
+        if (pos.y > height + r) {
+            pos.y = -r
+        } else if (pos.y < -r) {
+            pos.y = height + r
         }
     }
 }

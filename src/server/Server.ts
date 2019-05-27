@@ -187,6 +187,7 @@ class Server {
     private gameUpdateLoop = () => {
         const gameData = this.gameData
         // do game update logic
+        gameData.update()
 
         for (let socket of this.gameDataReceivingSockets) {
             ServerSocketEventsHelper.sendGameData(socket, gameData)
