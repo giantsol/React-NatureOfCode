@@ -1,5 +1,6 @@
-import {GameDataDTO, PlaceDTO, PlaceTypeDTO, PlayerDTO} from "../shared/DTOs"
+import {AsteroidDTO, GameDataDTO, PlaceDTO, PlaceTypeDTO, PlayerDTO} from "../shared/DTOs"
 import CustomP5Methods from "./CustomP5Methods"
+import Utils from "../shared/Utils"
 
 const HALF_PI = Math.PI / 2
 
@@ -53,38 +54,34 @@ export class ClientPlayer implements PlayerDTO {
 
 export class ClientGameData implements GameDataDTO {
     readonly players: ClientPlayer[] = []
+    readonly asteroids: ClientAsteroid[] = []
     places: ClientPlace[] = []
     canvasHeight: number = 0
     canvasWidth: number = 0
 
     update(newData: GameDataDTO, cp5: CustomP5Methods): void {
         this.updatePlayers(newData.players, cp5)
-        this.updatePlaces(newData.places)
+        this.updateAsteroids(newData.asteroids, cp5)
+        // this.updatePlaces(newData.places)
 
         this.canvasWidth = newData.canvasWidth
         this.canvasHeight = newData.canvasHeight
     }
 
     private updatePlayers(newPlayersData: PlayerDTO[], cp5: CustomP5Methods) {
-        const players = this.players
-        let i = players.length
+        Utils.updateArrayData(this.players, newPlayersData,
+            (e, n) => e.id === n.id,
+            (e, n) => e.update(n),
+            n => new ClientPlayer(n, cp5)
+        )
+    }
 
-        while (i--) {
-            const player = players[i]
-            const newPlayerDataIndex = newPlayersData.findIndex(value => value.id == player.id)
-            if (newPlayerDataIndex == -1) {
-                players.splice(i, 1)
-            } else {
-                // found
-                const newPlayerData = newPlayersData[newPlayerDataIndex]
-                player.update(newPlayerData)
-                newPlayersData.splice(newPlayerDataIndex, 1)
-            }
-        }
-
-        for (let newPlayerData of newPlayersData) {
-            players.push(new ClientPlayer(newPlayerData, cp5))
-        }
+    private updateAsteroids(newAsteroidsData: AsteroidDTO[], cp5: CustomP5Methods) {
+        Utils.updateArrayData(this.asteroids, newAsteroidsData,
+            (a: ClientAsteroid, b: AsteroidDTO) => a.id === b.id,
+            (prevData: ClientAsteroid, newData: AsteroidDTO) => prevData.update(newData),
+            (newData: AsteroidDTO) => new ClientAsteroid(newData, cp5)
+        )
     }
 
     private updatePlaces(newPlacesData: PlaceDTO[]) {
@@ -115,9 +112,54 @@ export class ClientGameData implements GameDataDTO {
             place.draw(ctx)
         }
 
+        for (let asteroid of this.asteroids) {
+            asteroid.draw()
+        }
+
         for (let player of this.players) {
             player.draw(ctx, myId === player.id)
         }
+    }
+}
+
+export class ClientAsteroid implements AsteroidDTO {
+    id: string
+    x: number
+    y: number
+    size: number
+    rotation: number
+    isOutsideScreen: boolean
+
+    private readonly cp5: CustomP5Methods
+
+    constructor(dto: AsteroidDTO, cp5: CustomP5Methods) {
+        this.id = dto.id
+        this.x = dto.x
+        this.y = dto.y
+        this.size = dto.size
+        this.rotation = dto.rotation
+        this.isOutsideScreen = dto.isOutsideScreen
+
+        this.cp5 = cp5
+    }
+
+    update(newData: AsteroidDTO): void {
+        this.x = newData.x
+        this.y = newData.y
+        this.rotation = newData.rotation
+        this.isOutsideScreen = newData.isOutsideScreen
+    }
+
+    draw(): void {
+        const p5 = this.cp5
+        const size = this.size
+        p5.save()
+        p5.translate(this.x, this.y)
+        p5.rotate(this.rotation)
+        p5.fill(255)
+        p5.stroke(255)
+        p5.ellipse(0, 0, size, size)
+        p5.restore()
     }
 }
 

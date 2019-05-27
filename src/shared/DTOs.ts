@@ -1,5 +1,6 @@
 export interface GameDataDTO {
     players: PlayerDTO[]
+    asteroids: AsteroidDTO[]
     places: PlaceDTO[]
     canvasWidth: number
     canvasHeight: number
@@ -12,6 +13,15 @@ export interface PlayerDTO {
     y: number
     size: number
     heading: number
+}
+
+export interface AsteroidDTO {
+    id: string
+    x: number
+    y: number
+    rotation: number
+    size: number
+    isOutsideScreen: boolean
 }
 
 export interface PlayerInputDTO {

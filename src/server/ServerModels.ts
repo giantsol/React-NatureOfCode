@@ -1,16 +1,26 @@
-import {GameDataDTO, PlaceDTO, PlaceTypeDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
+import {
+    AsteroidDTO,
+    GameDataDTO,
+    PlaceDTO,
+    PlaceTypeDTO,
+    PlayerDTO,
+    PlayerInputDTO
+} from "../shared/DTOs"
 import Utils from "../shared/Utils"
 import Victor = require("victor")
+import uuid = require("uuid")
 
 const HALF_PI = Math.PI / 2
 
 export class ServerGameData implements GameDataDTO {
     readonly players: ServerPlayer[] = []
+    readonly asteroids: ServerAsteroid[] = []
     readonly places: ServerPlace[]
     readonly canvasHeight: number = 2000
     readonly canvasWidth: number = 2000
 
     constructor() {
+        this.asteroids.push(new ServerAsteroid(100, 100, 50, 0))
         this.places = [
             new ServerLake(200, 200, 50),
             new ServerSnowland(400, 250, 50),
@@ -48,6 +58,7 @@ export class ServerGameData implements GameDataDTO {
         const width = this.canvasWidth
         const height = this.canvasHeight
         this.players.forEach(value => value.update(width, height))
+        this.asteroids.forEach(value => value.update(width, height))
     }
 }
 
@@ -130,6 +141,37 @@ export class ServerPlayer implements PlayerDTO {
         } else if (pos.y < -r) {
             pos.y = height + r
         }
+    }
+}
+
+export class ServerAsteroid implements AsteroidDTO {
+    id: string
+    x: number
+    y: number
+    rotation: number
+    size: number
+    isOutsideScreen = true
+
+    private rotationDelta = 0.1
+    private outsideThreshold = 50
+
+    constructor(x: number, y: number, size: number, rotation: number) {
+        this.id = uuid()
+        this.x = x
+        this.y = y
+        this.size = size
+        this.rotation = rotation
+    }
+
+    update(width: number, height: number): void {
+        this.rotation += this.rotationDelta
+
+        const x = this.x
+        const y = this.y
+        const size = this.size
+        const outsideThreshold = this.outsideThreshold
+        this.isOutsideScreen = x + size > width + outsideThreshold || x - size < -outsideThreshold
+            || y + size > height + outsideThreshold || y - size < -outsideThreshold
     }
 }
 
