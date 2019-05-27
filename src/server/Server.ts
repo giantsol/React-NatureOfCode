@@ -51,6 +51,10 @@ class Server {
             this.onPlayerLoggingInEvent(socket, name)
         })
 
+        ServerSocketEventsHelper.subscribeDisconnectedEvent(socket, () => {
+            this.onDisconnectedEvent(socket)
+        })
+
         ServerSocketEventsHelper.subscribePlayerLeavingGameEvent(socket, () => {
             this.onPlayerLeavingGameEvent(socket)
         })
@@ -109,6 +113,15 @@ class Server {
         if (index > -1) {
             this.gameDataReceivingSockets.splice(index, 1)
         }
+    }
+
+    private onDisconnectedEvent = (socket: Socket) => {
+        // 유저가 크롬 창을 그냥 닫거나 하는 등의 경우, onPlayerLeavingGameEvent같은게 안들어오고 바로
+        // 종료되기 때문에, cleanup이 안되었을 수도 있어서 여기서 다 클린업 해줘야함.
+
+        this.onStopReceivingGameDataEvent(socket)
+        this.onStopReceivingProjectSelectionDataEvent(socket)
+        this.onPlayerLeavingGameEvent(socket)
     }
 
     private onPlayerLeavingGameEvent = (socket: Socket) => {

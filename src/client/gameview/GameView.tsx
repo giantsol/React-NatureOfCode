@@ -111,7 +111,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     }
 
     private onNewPlayerJoinedEvent = (player: PlayerDTO) => {
-        this.props.enqueueSnackbar(`New Player ${player.name} joined!`, { variant: 'success' })
+        this.props.enqueueSnackbar(`New Player ${player.name} joined!`,
+            { variant: 'success', autoHideDuration: 2000 })
     }
 
     private onGameDataEvent = (gameData: GameDataDTO) => {
@@ -119,7 +120,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     }
 
     private onPlayerLeftEvent = (playerDTO: PlayerDTO) => {
-        this.props.enqueueSnackbar(`Player Left ${playerDTO.name}`, { variant: 'error' })
+        this.props.enqueueSnackbar(`Player Left ${playerDTO.name}`,
+            { variant: 'error', autoHideDuration: 2000 })
     }
 
     private processInputLoop = () => {
