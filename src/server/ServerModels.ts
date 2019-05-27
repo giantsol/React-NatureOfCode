@@ -4,6 +4,7 @@ import Victor = require("victor")
 import uuid = require("uuid")
 
 const HALF_PI = Math.PI / 2
+const TWO_PI = Math.PI * 2
 
 export class ServerGameData implements GameDataDTO {
     readonly players: ServerPlayer[] = []
@@ -193,11 +194,16 @@ export class ServerPlayer implements PlayerDTO {
 }
 
 export class ServerAsteroid implements AsteroidDTO {
+    static readonly vertexSize = 10
+
     readonly id: string = uuid()
     x!: number
     y!: number
     rotation: number = 0
-    size: number
+    readonly maxSize: number
+    readonly minSize: number
+    readonly vertices: number[][] = []
+
     needNewTarget = true
 
     private readonly rotationDelta: number
@@ -207,9 +213,19 @@ export class ServerAsteroid implements AsteroidDTO {
 
     constructor(width: number, height: number) {
         this.setRandomSpawnPoint(width, height)
-        this.size = Utils.randFloat(50, 100)
         this.rotationDelta = Utils.map(Math.random(), 0, 1, 0.01, 0.03)
         this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
+        this.maxSize = Utils.randInt(80, 100)
+        this.minSize = Utils.randInt(40, 60)
+
+        const vertexCount = ServerAsteroid.vertexSize
+        for (let i = 0; i < vertexCount; i++) {
+            const angle = Utils.map(i, 0, vertexCount, 0, TWO_PI)
+            const r = Utils.randInt(this.minSize, this.maxSize)
+            const x = r * Math.cos(angle)
+            const y = r * Math.sin(angle)
+            this.vertices.push([x, y])
+        }
     }
 
     createDigestedData(): AsteroidDTO {
@@ -218,7 +234,9 @@ export class ServerAsteroid implements AsteroidDTO {
             x: this.x,
             y: this.y,
             rotation: this.rotation,
-            size: this.size
+            minSize: this.minSize,
+            maxSize: this.maxSize,
+            vertices: this.vertices
         }
     }
 
@@ -252,7 +270,7 @@ export class ServerAsteroid implements AsteroidDTO {
 
         const x = this.x
         const y = this.y
-        const size = this.size
+        const size = this.maxSize
         const outsideThreshold = this.outsideThreshold
 
         if (!this.needNewTarget) {

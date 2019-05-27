@@ -20,7 +20,9 @@ export interface AsteroidDTO {
     x: number
     y: number
     rotation: number
-    size: number
+    minSize: number
+    maxSize: number
+    vertices: number[][]
 }
 
 export interface PlayerInputDTO {
