@@ -1,7 +1,6 @@
 export interface GameDataDTO {
     players: PlayerDTO[]
     asteroids: AsteroidDTO[]
-    places: PlaceDTO[]
     canvasWidth: number
     canvasHeight: number
 }
@@ -27,20 +26,6 @@ export interface PlayerInputDTO {
     left: boolean
     right: boolean
     up: boolean
-}
-
-export interface PlaceDTO {
-    x: number
-    y: number
-    size: number
-    type: PlaceTypeDTO
-}
-
-export enum PlaceTypeDTO {
-    LAKE,
-    SNOWLAND,
-    ICELAND,
-    HIGHGRASSLAND
 }
 
 export interface ProjectSelectionDataDTO {
