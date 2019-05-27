@@ -171,7 +171,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     }
 
     private updateCanvasSizeIfChanged(gameData: ClientGameData): void {
-        if (this.height != gameData.canvasHeight || this.width != gameData.canvasWidth) {
+        if (this.height !== gameData.canvasHeight || this.width !== gameData.canvasWidth) {
             const canvas = this.canvasRef.current
             if (canvas) {
                 canvas.width = gameData.canvasWidth

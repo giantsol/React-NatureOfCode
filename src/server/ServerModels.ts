@@ -20,7 +20,13 @@ export class ServerGameData implements GameDataDTO {
     readonly canvasWidth: number = 2000
 
     constructor() {
-        this.asteroids.push(new ServerAsteroid(100, 100, 50, 0))
+        const w = this.canvasWidth
+        const h = this.canvasHeight
+        this.asteroids.push(
+            new ServerAsteroid(w, h),
+            new ServerAsteroid(w, h),
+            new ServerAsteroid(w, h)
+        )
         this.places = [
             new ServerLake(200, 200, 50),
             new ServerSnowland(400, 250, 50),
@@ -57,8 +63,18 @@ export class ServerGameData implements GameDataDTO {
     update(): void {
         const width = this.canvasWidth
         const height = this.canvasHeight
-        this.players.forEach(value => value.update(width, height))
-        this.asteroids.forEach(value => value.update(width, height))
+        this.players.forEach(player => player.update(width, height))
+        this.asteroids.forEach(asteroid =>{
+            asteroid.update(width, height)
+            if (asteroid.needNewTarget) {
+                const randPlayer = Utils.pickRandom(this.players)
+                if (randPlayer) {
+                    asteroid.setTarget(new Victor(randPlayer.x, randPlayer.y))
+                } else {
+                    asteroid.setTarget(new Victor(Utils.randInt(0, width), Utils.randInt(0, height)))
+                }
+            }
+        })
     }
 }
 
@@ -107,7 +123,7 @@ export class ServerPlayer implements PlayerDTO {
         this.updateBoostingForce(this.isBoosting)
         this.acceleration.add(this.boostingForce)
         this.velocity.add(this.acceleration)
-        this.velocity.multiplyScalar(0.98)
+        this.velocity.multiplyScalar(0.99)
         this.pos.add(this.velocity)
         this.x = this.pos.x
         this.y = this.pos.y
@@ -146,32 +162,62 @@ export class ServerPlayer implements PlayerDTO {
 
 export class ServerAsteroid implements AsteroidDTO {
     id: string
-    x: number
-    y: number
-    rotation: number
+    x!: number
+    y!: number
+    rotation: number = 0
     size: number
-    isOutsideScreen = true
+    needNewTarget = true
 
-    private rotationDelta = 0.1
-    private outsideThreshold = 50
+    private readonly rotationDelta: number
+    private readonly outsideThreshold = 50
+    private velocity = new Victor(0, 0)
+    private readonly speed: number
 
-    constructor(x: number, y: number, size: number, rotation: number) {
+    constructor(width: number, height: number) {
         this.id = uuid()
-        this.x = x
-        this.y = y
-        this.size = size
-        this.rotation = rotation
+        this.setRandomSpawnPoint(width, height)
+        this.size = Utils.randFloat(50, 100)
+        this.rotationDelta = Utils.map(Math.random(), 0, 1, 0.01, 0.03)
+        this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
+    }
+
+    setTarget(pos: Victor): void {
+        const v = pos.subtract(new Victor(this.x, this.y))
+        this.velocity = v.norm().multiplyScalar(this.speed)
+        this.needNewTarget = false
+    }
+
+    private setRandomSpawnPoint(width: number, height: number) {
+        const rand = Math.random()
+        if (rand < 0.25) {
+            this.x = Utils.randFloat(-200, -100)
+            this.y = Utils.randFloat(0, height)
+        } else if (rand < 0.5) {
+            this.x = Utils.randFloat(0, width)
+            this.y = Utils.randFloat(-200, -100)
+        } else if (rand < 0.75) {
+            this.x = Utils.randFloat(width + 100, width + 200)
+            this.y = Utils.randFloat(0, height)
+        } else {
+            this.x = Utils.randFloat(0, width)
+            this.y = Utils.randFloat(height + 100, height + 200)
+        }
     }
 
     update(width: number, height: number): void {
         this.rotation += this.rotationDelta
+        this.x += this.velocity.x
+        this.y += this.velocity.y
 
         const x = this.x
         const y = this.y
         const size = this.size
         const outsideThreshold = this.outsideThreshold
-        this.isOutsideScreen = x + size > width + outsideThreshold || x - size < -outsideThreshold
-            || y + size > height + outsideThreshold || y - size < -outsideThreshold
+
+        if (!this.needNewTarget) {
+            this.needNewTarget = x - size > width + outsideThreshold || x + size < -outsideThreshold
+                || y - size > height + outsideThreshold || y + size < -outsideThreshold
+        }
     }
 }
 

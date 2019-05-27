@@ -21,7 +21,6 @@ export interface AsteroidDTO {
     y: number
     rotation: number
     size: number
-    isOutsideScreen: boolean
 }
 
 export interface PlayerInputDTO {

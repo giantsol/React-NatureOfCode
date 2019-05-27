@@ -1,8 +1,11 @@
 import {AsteroidDTO, GameDataDTO, PlaceDTO, PlaceTypeDTO, PlayerDTO} from "../shared/DTOs"
 import CustomP5Methods from "./CustomP5Methods"
 import Utils from "../shared/Utils"
+import * as p5 from "p5"
 
 const HALF_PI = Math.PI / 2
+const TWO_PI = Math.PI * 2
+const p5p = p5.prototype
 
 export class ClientPlayer implements PlayerDTO {
     static readonly meColor = `rgb(255, 0, 0)`
@@ -128,9 +131,11 @@ export class ClientAsteroid implements AsteroidDTO {
     y: number
     size: number
     rotation: number
-    isOutsideScreen: boolean
 
     private readonly cp5: CustomP5Methods
+    private readonly vertexCount = 15
+    private readonly vertexInsets: number[] = []
+    private readonly maxInset: number
 
     constructor(dto: AsteroidDTO, cp5: CustomP5Methods) {
         this.id = dto.id
@@ -138,28 +143,43 @@ export class ClientAsteroid implements AsteroidDTO {
         this.y = dto.y
         this.size = dto.size
         this.rotation = dto.rotation
-        this.isOutsideScreen = dto.isOutsideScreen
+        this.maxInset = this.size / 4
 
         this.cp5 = cp5
+
+        const insets = this.vertexInsets
+        const maxInset = this.maxInset
+        for (let i = 0; i < this.vertexCount; i++) {
+            insets.push(p5p.map(Math.random(), 0, 1, 0, maxInset))
+        }
     }
 
     update(newData: AsteroidDTO): void {
         this.x = newData.x
         this.y = newData.y
         this.rotation = newData.rotation
-        this.isOutsideScreen = newData.isOutsideScreen
     }
 
     draw(): void {
-        const p5 = this.cp5
+        const cp5 = this.cp5
         const size = this.size
-        p5.save()
-        p5.translate(this.x, this.y)
-        p5.rotate(this.rotation)
-        p5.fill(255)
-        p5.stroke(255)
-        p5.ellipse(0, 0, size, size)
-        p5.restore()
+        cp5.save()
+        cp5.translate(this.x, this.y)
+        cp5.rotate(this.rotation)
+        cp5.fill(255)
+        cp5.stroke(255)
+        cp5.beginShape()
+        const insets = this.vertexInsets
+        const count = this.vertexCount
+        for (let i = 0; i < count; i++) {
+            const angle = p5p.map(i, 0, count, 0, TWO_PI)
+            const r = size - insets[i]
+            const x = r * Math.cos(angle)
+            const y = r * Math.sin(angle)
+            cp5.vertex(x, y)
+        }
+        cp5.endShape()
+        cp5.restore()
     }
 }
 
