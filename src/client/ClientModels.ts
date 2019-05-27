@@ -11,10 +11,11 @@ export class ClientPlayer implements PlayerDTO {
 
     readonly id: string
     readonly name: string
-    size: number
+    readonly size: number
     heading: number
     x: number
     y: number
+    readonly vertices: number[][]
 
     private readonly cp5: CustomP5Methods
 
@@ -25,19 +26,18 @@ export class ClientPlayer implements PlayerDTO {
         this.heading = data.heading
         this.x = data.x
         this.y = data.y
+        this.vertices = data.vertices
         this.cp5 = cp5
     }
 
     update(newData: PlayerDTO): void {
         this.x = newData.x
         this.y = newData.y
-        this.size = newData.size
         this.heading = newData.heading
     }
 
     draw(isMe: boolean): void {
         const p5 = this.cp5
-        const r = this.size
         p5.save()
         p5.translate(this.x, this.y)
         p5.rotate(this.heading - HALF_PI)
@@ -48,7 +48,11 @@ export class ClientPlayer implements PlayerDTO {
             p5.fill(255)
             p5.stroke(255)
         }
-        p5.triangle(-r, r, r, r, 0, -r)
+
+        const vertices = this.vertices
+        p5.triangle(vertices[0][0], vertices[0][1],
+            vertices[1][0], vertices[1][1],
+            vertices[2][0], vertices[2][1])
         p5.restore()
     }
 }

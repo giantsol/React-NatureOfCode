@@ -13,6 +13,7 @@ export interface PlayerDTO {
     y: number
     size: number
     heading: number
+    vertices: number[][]
 }
 
 export interface AsteroidDTO {

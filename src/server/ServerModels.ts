@@ -38,7 +38,6 @@ export class ServerGameData implements GameDataDTO {
 
     addNewPlayer(newPlayer: ServerPlayer): void {
         newPlayer.setPos(this.canvasWidth / 2, this.canvasHeight / 2)
-        newPlayer.size = Utils.randInt(12, 15)
         this.players.push(newPlayer)
     }
 
@@ -85,10 +84,11 @@ export class ServerGameData implements GameDataDTO {
 export class ServerPlayer implements PlayerDTO {
     readonly id: string
     readonly name: string
-    size: number = 0
+    readonly size: number = 15
     heading: number = HALF_PI
     x: number = 0
     y: number = 0
+    readonly vertices: number[][] = []
 
     private rotation = 0
     private velocity = new Victor(0, 0)
@@ -109,6 +109,9 @@ export class ServerPlayer implements PlayerDTO {
         this.id = id
         this.name = name
         this.bulletHouse = bulletHouse
+
+        const size = this.size
+        this.vertices.push([-size, size], [size, size], [0, -size])
     }
 
     createDigestedData(): PlayerDTO {
@@ -118,7 +121,8 @@ export class ServerPlayer implements PlayerDTO {
             x: this.x,
             y: this.y,
             size: this.size,
-            heading: this.heading
+            heading: this.heading,
+            vertices: this.vertices
         }
     }
 
