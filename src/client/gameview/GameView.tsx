@@ -4,13 +4,17 @@ import {GameDataDTO, PlayerDTO, PlayerInputDTO} from "../../shared/DTOs"
 import {ClientGameData} from "../ClientModels"
 import {withSnackbar} from 'notistack'
 import {WithSnackbarProps} from "notistack/build"
+import LogInView from "./LogInView"
 
 interface Props extends WithSnackbarProps {
     socket: SocketIOClient.Emitter
-    myId: string
 }
 
-class GameView extends React.Component<Props, any> {
+interface State {
+    myId: string | null
+}
+
+class GameView extends React.Component<Props, State> {
     private static readonly inputProcessingInterval = 1000 / 60
 
     private readonly canvasRef = createRef<HTMLCanvasElement>()
@@ -31,6 +35,11 @@ class GameView extends React.Component<Props, any> {
     }
     private inputProcessingLoopHandler: NodeJS.Timeout | null = null
 
+    constructor(props: Props) {
+        super(props)
+        this.state = { myId: null }
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -38,8 +47,15 @@ class GameView extends React.Component<Props, any> {
                         style={{width: "auto", height: "100vh", display: "block", margin: "auto"}}>
                     Fallback text for old browsers.
                 </canvas>
+                { this.state.myId
+                    ? null : <LogInView socket={this.props.socket} onLoggedIn={this.onLoggedIn} />
+                }
             </React.Fragment>
         )
+    }
+
+    private onLoggedIn = (id: string) => {
+        this.setState({myId: id})
     }
 
     componentDidMount(): void {
@@ -116,6 +132,7 @@ class GameView extends React.Component<Props, any> {
         }
 
         const socket = this.props.socket
+        ClientSocketEventsHelper.sendPlayerLeavingGameEvent(socket)
         ClientSocketEventsHelper.stopReceivingFrameData(socket)
         ClientSocketEventsHelper.unsubscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
         ClientSocketEventsHelper.unsubscribeGameDataEvent(socket, this.onGameDataEvent)
@@ -130,7 +147,7 @@ class GameView extends React.Component<Props, any> {
         const ctx = this.canvasContext
         const gameData = this.currentGameData
         if (ctx && gameData) {
-            gameData.draw(ctx, this.props.myId)
+            gameData.draw(ctx, this.state.myId)
             this.updateCanvasSizeIfChanged(gameData)
         }
 

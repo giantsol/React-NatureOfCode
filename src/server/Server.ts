@@ -27,7 +27,8 @@ class Server {
         { num: 1, name: "First", isOpen: true },
         { num: 2, name: "Second", isOpen: true },
         { num: 3, name: "Third", isOpen: false },
-        { num: 4, name: "Fourth", isOpen: true }
+        { num: 4, name: "Fourth", isOpen: true },
+        { num: 5, name: "Final", isOpen: true }
     ]
     private rootIds: string[] = []
 
@@ -50,16 +51,16 @@ class Server {
             this.onPlayerLoggingInEvent(socket, name)
         })
 
+        ServerSocketEventsHelper.subscribePlayerLeavingGameEvent(socket, () => {
+            this.onPlayerLeavingGameEvent(socket)
+        })
+
         ServerSocketEventsHelper.subscribeStartReceivingGameDataEvent(socket, () => {
             this.onStartReceivingGameDataEvent(socket)
         })
 
         ServerSocketEventsHelper.subscribeStopReceivingGameDataEvent(socket, () => {
             this.onStopReceivingGameDataEvent(socket)
-        })
-
-        ServerSocketEventsHelper.subscribeDisconnectedEvent(socket, () => {
-            this.onDisconnectedEvent(socket)
         })
 
         ServerSocketEventsHelper.subscribePlayerInputEvent(socket, playerInput => {
@@ -110,7 +111,7 @@ class Server {
         }
     }
 
-    private onDisconnectedEvent = (socket: Socket) => {
+    private onPlayerLeavingGameEvent = (socket: Socket) => {
         const disconnectedPlayer = this.gameData.removePlayerById(socket.id)
         if (disconnectedPlayer) {
             ServerSocketEventsHelper.sendPlayerLeft(socket, disconnectedPlayer)

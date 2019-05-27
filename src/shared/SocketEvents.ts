@@ -12,6 +12,11 @@ export class ConnectedEvent {
     static readonly key = "connection"
 }
 
+export type PlayerLeavingGameEventCallback = () => void
+export class PlayerLeavingGameEvent {
+    static readonly key = "player_leaving_game"
+}
+
 export type DisconnectedEventCallback = () => void
 export class DisconnectedEvent {
     static readonly key = "disconnect"

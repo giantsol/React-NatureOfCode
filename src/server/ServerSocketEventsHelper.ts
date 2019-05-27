@@ -28,7 +28,10 @@ import {
     RequestUnrootEvent,
     RootMessageEvent,
     RequestLockProjectEvent,
-    RequestLockProjectEventCallback, RequestUnlockProjectEvent, RequestUnlockProjectEventCallback
+    RequestLockProjectEventCallback,
+    RequestUnlockProjectEvent,
+    RequestUnlockProjectEventCallback,
+    PlayerLeavingGameEventCallback, PlayerLeavingGameEvent
 } from "../shared/SocketEvents"
 import {
     GameDataDTO,
@@ -108,5 +111,9 @@ export class ServerSocketEventsHelper {
 
     public static subscribeRequestUnlockProjectEvent(socket: Socket, callback: RequestUnlockProjectEventCallback): void {
         socket.on(RequestUnlockProjectEvent.key, callback)
+    }
+
+    public static subscribePlayerLeavingGameEvent(socket: Socket, callback: PlayerLeavingGameEventCallback): void {
+        socket.on(PlayerLeavingGameEvent.key, callback)
     }
 }

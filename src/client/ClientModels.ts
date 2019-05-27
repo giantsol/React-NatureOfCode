@@ -96,7 +96,7 @@ export class ClientGameData implements GameDataDTO {
         this.places = newPlaces
     }
 
-    draw(ctx: CanvasRenderingContext2D, myId: string): void {
+    draw(ctx: CanvasRenderingContext2D, myId: string | null): void {
         ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
 
         for (let place of this.places) {
@@ -104,7 +104,7 @@ export class ClientGameData implements GameDataDTO {
         }
 
         for (let player of this.players) {
-            player.draw(ctx, myId == player.id)
+            player.draw(ctx, myId === player.id)
         }
     }
 }

@@ -1,11 +1,11 @@
 import React, {ChangeEvent, FormEvent} from 'react'
 import Button from '@material-ui/core/Button'
-import Grid from '@material-ui/core/Grid'
-import Paper from '@material-ui/core/Paper'
-import FormControl from '@material-ui/core/FormControl'
-import InputLabel from '@material-ui/core/InputLabel'
-import Input from '@material-ui/core/Input'
 import {ClientSocketEventsHelper} from "../ClientSocketEventsHelper"
+import {Dialog} from "@material-ui/core"
+import DialogTitle from "@material-ui/core/DialogTitle"
+import DialogContent from "@material-ui/core/DialogContent"
+import TextField from "@material-ui/core/TextField"
+import DialogActions from "@material-ui/core/DialogActions"
 
 interface Props {
     socket: SocketIOClient.Emitter
@@ -37,19 +37,19 @@ export default class LogInView extends React.Component<Props, State> {
 
     render() {
         return (
-            <Grid container justify="center">
-                <Grid item xs={8} sm={6} lg={3}>
-                    <Paper style={{paddingLeft: 16, paddingRight: 16}}>
-                        <form onSubmit={this.onLogInButtonClicked} autoComplete="off">
-                            <FormControl margin="normal" required fullWidth>
-                                <InputLabel htmlFor="name">이름</InputLabel>
-                                <Input id="name" name="name" autoFocus value={this.state.inputName} onChange={this.onInputChanged}/>
-                            </FormControl>
-                            <Button type="submit" fullWidth variant="contained" color="primary">로그인</Button>
-                        </form>
-                    </Paper>
-                </Grid>
-            </Grid>
+            <Dialog open={true}>
+                <form onSubmit={this.onLogInButtonClicked} autoComplete="off">
+                    <DialogTitle>로그인</DialogTitle>
+                    <DialogContent>
+                        <TextField id="name" name="name" autoFocus
+                                   margin="dense" label="Nickname" fullWidth
+                                   value={this.state.inputName} onChange={this.onInputChanged}/>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button type="submit" fullWidth variant="contained" color="primary">확인</Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
         )
     }
 

@@ -3,7 +3,7 @@ import {
     GameDataEventCallback,
     NewPlayerJoinedEvent,
     NewPlayerJoinedEventCallback,
-    PlayerInputEvent,
+    PlayerInputEvent, PlayerLeavingGameEvent,
     PlayerLeftEvent,
     PlayerLeftEventCallback,
     PlayerLoggingInEvent,
@@ -108,6 +108,10 @@ export class ClientSocketEventsHelper {
 
     public static sendRequestLockProjectEvent(socket: SocketIOClient.Emitter, projectNum: number): void {
         socket.emit(RequestLockProjectEvent.key, ...RequestLockProjectEvent.emitterParams(projectNum))
+    }
+
+    public static sendPlayerLeavingGameEvent(socket: SocketIOClient.Emitter): void {
+        socket.emit(PlayerLeavingGameEvent.key)
     }
 
     public static sendRequestUnlockProjectEvent(socket: SocketIOClient.Emitter, projectNum: number): void {

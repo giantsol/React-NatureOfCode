@@ -3,6 +3,7 @@ import {RouteComponentProps} from "react-router"
 import Project01 from "./Project01"
 import Project02 from "./Project02"
 import Project04 from "./Project04"
+import GameView from "../gameview/GameView"
 
 interface MatchParams {
     projectNum: string
@@ -24,6 +25,9 @@ export default class ProjectView extends React.Component<Props, any> {
                 break
             case "4":
                 main = <Project04 />
+                break
+            case "5":
+                main = <GameView socket={this.props.socket} />
                 break
         }
         return (
