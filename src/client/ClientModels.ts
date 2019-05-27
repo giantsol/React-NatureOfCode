@@ -1,4 +1,4 @@
-import {AsteroidDTO, GameDataDTO, PlayerDTO} from "../shared/DTOs"
+import {AsteroidDTO, BulletDTO, GameDataDTO, PlayerDTO} from "../shared/DTOs"
 import CustomP5Methods from "./CustomP5Methods"
 import Utils from "../shared/Utils"
 import * as p5 from "p5"
@@ -37,7 +37,7 @@ export class ClientPlayer implements PlayerDTO {
         this.heading = newData.heading
     }
 
-    draw(ctx: CanvasRenderingContext2D, isMe: boolean): void {
+    draw(isMe: boolean): void {
         const p5 = this.cp5
         const r = this.size
         p5.save()
@@ -58,12 +58,14 @@ export class ClientPlayer implements PlayerDTO {
 export class ClientGameData implements GameDataDTO {
     readonly players: ClientPlayer[] = []
     readonly asteroids: ClientAsteroid[] = []
+    readonly bullets: ClientBullet[] = []
     canvasHeight: number = 0
     canvasWidth: number = 0
 
     update(newData: GameDataDTO, cp5: CustomP5Methods): void {
         this.updatePlayers(newData.players, cp5)
         this.updateAsteroids(newData.asteroids, cp5)
+        this.updateBullets(newData.bullets, cp5)
 
         this.canvasWidth = newData.canvasWidth
         this.canvasHeight = newData.canvasHeight
@@ -85,6 +87,14 @@ export class ClientGameData implements GameDataDTO {
         )
     }
 
+    private updateBullets(newData: BulletDTO[], cp5: CustomP5Methods) {
+        Utils.updateArrayData(this.bullets, newData,
+            (a, b) => a.id === b.id,
+            (a, b) => a.update(b),
+            (b) => new ClientBullet(b, cp5)
+        )
+    }
+
     draw(ctx: CanvasRenderingContext2D, myId: string | null): void {
         ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
 
@@ -97,8 +107,12 @@ export class ClientGameData implements GameDataDTO {
             asteroid.draw()
         }
 
+        for (let bullet of this.bullets) {
+            bullet.draw()
+        }
+
         for (let player of this.players) {
-            player.draw(ctx, myId === player.id)
+            player.draw(myId === player.id)
         }
     }
 }
@@ -156,6 +170,47 @@ export class ClientAsteroid implements AsteroidDTO {
             const y = r * Math.sin(angle)
             cp5.vertex(x, y)
         }
+        cp5.endShape()
+        cp5.restore()
+    }
+}
+
+export class ClientBullet implements BulletDTO {
+    static readonly size = 10
+
+    id: string
+    x: number
+    y: number
+    heading: number
+
+    private readonly cp5: CustomP5Methods
+
+    constructor(data: BulletDTO, cp5: CustomP5Methods) {
+        this.id = data.id
+        this.x = data.x
+        this.y = data.y
+        this.heading = data.heading
+        this.cp5 = cp5
+    }
+
+    update(data: BulletDTO) {
+        this.x = data.x
+        this.y = data.y
+        this.heading = data.heading
+    }
+
+    draw() {
+        const cp5 = this.cp5
+        cp5.save()
+        cp5.translate(this.x, this.y)
+        cp5.rotate(this.heading - HALF_PI)
+        cp5.noFill()
+        cp5.stroke(255)
+        cp5.strokeWeight(5)
+        cp5.beginShape()
+        const halfSize = ClientBullet.size
+        cp5.vertex(0, -halfSize)
+        cp5.vertex(0, halfSize)
         cp5.endShape()
         cp5.restore()
     }

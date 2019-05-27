@@ -1,4 +1,4 @@
-import {AsteroidDTO, GameDataDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
+import {AsteroidDTO, BulletDTO, GameDataDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
 import Utils from "../shared/Utils"
 import Victor = require("victor")
 import uuid = require("uuid")
@@ -10,6 +10,10 @@ export class ServerGameData implements GameDataDTO {
     readonly asteroids: ServerAsteroid[] = []
     readonly canvasHeight: number = 2000
     readonly canvasWidth: number = 2000
+    // unused. implement가 성사하도록 있는 더미
+    bullets: BulletDTO[] = []
+
+    readonly bulletHouse: BulletHouse = new BulletHouse()
 
     constructor() {
         const w = this.canvasWidth
@@ -19,6 +23,16 @@ export class ServerGameData implements GameDataDTO {
             new ServerAsteroid(w, h),
             new ServerAsteroid(w, h)
         )
+    }
+
+    createDigestedData(): GameDataDTO {
+        return {
+            players: this.players.map(player => player.createDigestedData()),
+            asteroids: this.asteroids.map(asteroid => asteroid.createDigestedData()),
+            bullets: this.bulletHouse.usingBullets.map(bullet => bullet.createDigestedData()),
+            canvasHeight: this.canvasHeight,
+            canvasWidth: this.canvasWidth
+        }
     }
 
     addNewPlayer(newPlayer: ServerPlayer): void {
@@ -50,7 +64,8 @@ export class ServerGameData implements GameDataDTO {
         const width = this.canvasWidth
         const height = this.canvasHeight
         this.players.forEach(player => player.update(width, height))
-        this.asteroids.forEach(asteroid =>{
+
+        this.asteroids.forEach(asteroid => {
             asteroid.update(width, height)
             if (asteroid.needNewTarget) {
                 const randPlayer = Utils.pickRandom(this.players)
@@ -61,17 +76,18 @@ export class ServerGameData implements GameDataDTO {
                 }
             }
         })
+
+        this.bulletHouse.update(width, height)
     }
 }
 
 export class ServerPlayer implements PlayerDTO {
     readonly id: string
     readonly name: string
-    private pos: Victor = new Victor(0, 0)
     size: number = 0
     heading: number = HALF_PI
-    x: number = this.pos.x
-    y: number = this.pos.y
+    x: number = 0
+    y: number = 0
 
     private rotation = 0
     private velocity = new Victor(0, 0)
@@ -79,14 +95,33 @@ export class ServerPlayer implements PlayerDTO {
     private boostingForce = new Victor(0, 0)
     private isBoosting = false
 
-    constructor(id: string, name: string) {
+    private isFiring = false
+
+    private fireInterval = 1000 / 4
+    private now = 0
+    private then = Date.now()
+    private fireDelta = 0
+
+    private bulletHouse: BulletHouse
+
+    constructor(id: string, name: string, bulletHouse: BulletHouse) {
         this.id = id
         this.name = name
+        this.bulletHouse = bulletHouse
+    }
+
+    createDigestedData(): PlayerDTO {
+        return {
+            id: this.id,
+            name: this.name,
+            x: this.x,
+            y: this.y,
+            size: this.size,
+            heading: this.heading
+        }
     }
 
     setPos(x: number, y: number): void {
-        this.pos.x = x
-        this.pos.y = y
         this.x = x
         this.y = y
     }
@@ -101,6 +136,8 @@ export class ServerPlayer implements PlayerDTO {
         } else if (!playerInput.left && !playerInput.right) {
             this.rotation = 0
         }
+
+        this.isFiring = playerInput.fire
     }
 
     update(width: number, height: number): void {
@@ -110,13 +147,23 @@ export class ServerPlayer implements PlayerDTO {
         this.acceleration.add(this.boostingForce)
         this.velocity.add(this.acceleration)
         this.velocity.multiplyScalar(0.99)
-        this.pos.add(this.velocity)
-        this.x = this.pos.x
-        this.y = this.pos.y
+        this.x += this.velocity.x
+        this.y += this.velocity.y
 
         this.edges(width, height)
 
         this.acceleration.multiplyScalar(0)
+
+        if (this.isFiring) {
+            this.now = Date.now()
+            this.fireDelta = this.now - this.then
+            if (this.fireDelta > this.fireInterval) {
+                this.then = this.now
+
+                // fire bullet!
+                this.bulletHouse.fireBullet(this.id, this.x, this.y, this.heading)
+            }
+        }
     }
 
     private updateBoostingForce(isBoosting: boolean): void {
@@ -129,25 +176,24 @@ export class ServerPlayer implements PlayerDTO {
     }
 
     private edges(width: number, height: number): void {
-        const pos = this.pos
         const r = this.size
 
-        if (pos.x > width + r) {
-            pos.x = -r
-        } else if (pos.x < -r) {
-            pos.x = width + r
+        if (this.x > width + r) {
+            this.x = -r
+        } else if (this.x < -r) {
+            this.x = width + r
         }
 
-        if (pos.y > height + r) {
-            pos.y = -r
-        } else if (pos.y < -r) {
-            pos.y = height + r
+        if (this.y > height + r) {
+            this.y = -r
+        } else if (this.y < -r) {
+            this.y = height + r
         }
     }
 }
 
 export class ServerAsteroid implements AsteroidDTO {
-    id: string
+    readonly id: string = uuid()
     x!: number
     y!: number
     rotation: number = 0
@@ -160,11 +206,20 @@ export class ServerAsteroid implements AsteroidDTO {
     private readonly speed: number
 
     constructor(width: number, height: number) {
-        this.id = uuid()
         this.setRandomSpawnPoint(width, height)
         this.size = Utils.randFloat(50, 100)
         this.rotationDelta = Utils.map(Math.random(), 0, 1, 0.01, 0.03)
         this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
+    }
+
+    createDigestedData(): AsteroidDTO {
+        return {
+            id: this.id,
+            x: this.x,
+            y: this.y,
+            rotation: this.rotation,
+            size: this.size
+        }
     }
 
     setTarget(pos: Victor): void {
@@ -204,5 +259,86 @@ export class ServerAsteroid implements AsteroidDTO {
             this.needNewTarget = x - size > width + outsideThreshold || x + size < -outsideThreshold
                 || y - size > height + outsideThreshold || y + size < -outsideThreshold
         }
+    }
+}
+
+export class BulletHouse {
+    private readonly recycledBullets: ServerBullet[] = []
+    readonly usingBullets: ServerBullet[] = []
+
+    fireBullet(firerId: string, x: number, y: number, heading: number): void {
+        const bullet = this.createOrGetBullet()
+        bullet.setInitValues(firerId, x, y, heading)
+        this.usingBullets.push(bullet)
+    }
+
+    private createOrGetBullet(): ServerBullet {
+        let bullet = this.recycledBullets.pop()
+        if (!bullet) {
+            bullet = new ServerBullet()
+        }
+        return bullet
+    }
+
+    update(width: number, height: number): void {
+        const usingBullets = this.usingBullets
+        const recycledBullets = this.recycledBullets
+        let i = usingBullets.length
+        while (i--) {
+            const bullet = usingBullets[i]
+            bullet.update(width, height)
+            if (bullet.needsToBeRecycled) {
+                bullet.prepareRecycle()
+                recycledBullets.push(bullet)
+                usingBullets.splice(i, 1)
+            }
+        }
+    }
+}
+
+export class ServerBullet implements BulletDTO {
+    static readonly speed = 10
+
+    readonly id: string = uuid()
+    x: number = 0
+    y: number = 0
+    heading: number = 0
+
+    private firerId: string | null = null
+    private velocity = new Victor(0, 0)
+
+    needsToBeRecycled = false
+
+    createDigestedData(): BulletDTO {
+        return {
+            id: this.id,
+            x: this.x,
+            y: this.y,
+            heading: this.heading
+        }
+    }
+
+    setInitValues(firerId: string, x: number, y: number, heading: number): void {
+        this.firerId = firerId
+        this.x = x
+        this.y = y
+        this.heading = heading
+        this.velocity = new Victor(1, 1).rotateBy(heading + HALF_PI).norm().multiplyScalar(ServerBullet.speed)
+    }
+
+    update(width: number, height: number): void {
+        this.x += this.velocity.x
+        this.y += this.velocity.y
+
+        const x = this.x
+        const y = this.y
+        if (!this.needsToBeRecycled) {
+            this.needsToBeRecycled = x > width || x < 0 || y > height || y < 0
+        }
+    }
+
+    prepareRecycle(): void {
+        this.firerId = null
+        this.needsToBeRecycled = false
     }
 }

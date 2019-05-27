@@ -58,7 +58,7 @@ export class ClientSocketEventsHelper {
         socket.emit(StartReceivingGameDataEvent.key)
     }
 
-    public static stopReceivingFrameData(socket: SocketIOClient.Emitter): void {
+    public static stopReceivingGameData(socket: SocketIOClient.Emitter): void {
         socket.emit(StopReceivingGameDataEvent.key)
     }
 

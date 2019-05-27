@@ -31,7 +31,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     private readonly playerInput: PlayerInputDTO = {
         left: false,
         right: false,
-        up: false
+        up: false,
+        fire: false
     }
     private inputProcessingLoopHandler: NodeJS.Timeout | null = null
 
@@ -92,6 +93,9 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
                     case "ArrowUp":
                         this.playerInput.up = true
                         break
+                    case 'Space':
+                        this.playerInput.fire = true
+                        break
                 }
             })
             document.addEventListener('keyup', event => {
@@ -104,6 +108,9 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
                         break
                     case "ArrowUp":
                         this.playerInput.up = false
+                        break
+                    case 'Space':
+                        this.playerInput.fire = false
                         break
                 }
             })
@@ -138,7 +145,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
 
         const socket = this.props.socket
         ClientSocketEventsHelper.sendPlayerLeavingGameEvent(socket)
-        ClientSocketEventsHelper.stopReceivingFrameData(socket)
+        ClientSocketEventsHelper.stopReceivingGameData(socket)
         ClientSocketEventsHelper.unsubscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
         ClientSocketEventsHelper.unsubscribeGameDataEvent(socket, this.onGameDataEvent)
         ClientSocketEventsHelper.unsubscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)

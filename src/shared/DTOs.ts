@@ -1,6 +1,7 @@
 export interface GameDataDTO {
     players: PlayerDTO[]
     asteroids: AsteroidDTO[]
+    bullets: BulletDTO[]
     canvasWidth: number
     canvasHeight: number
 }
@@ -26,6 +27,7 @@ export interface PlayerInputDTO {
     left: boolean
     right: boolean
     up: boolean
+    fire: boolean
 }
 
 export interface ProjectSelectionDataDTO {
@@ -46,4 +48,11 @@ export enum RootMessageDTO {
     PROJECT_LOCKED,
     PROJECT_UNLOCKED,
     PERMISSION_DENIED
+}
+
+export interface BulletDTO {
+    id: string
+    x: number
+    y: number
+    heading: number
 }

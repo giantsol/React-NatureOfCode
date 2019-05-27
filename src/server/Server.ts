@@ -1,8 +1,8 @@
 import {Request, Response} from "express"
 import {ServerSocketEventsHelper} from "./ServerSocketEventsHelper"
 import {Socket} from "socket.io"
-import {ServerGameData, ServerPlayer} from "./ServerModels"
-import {PlayerInputDTO, RootMessageDTO} from "../shared/DTOs"
+import {BulletHouse, ServerGameData, ServerPlayer} from "./ServerModels"
+import {GameDataDTO, PlayerInputDTO, RootMessageDTO} from "../shared/DTOs"
 
 const express = require('express')
 const app = express()
@@ -97,8 +97,7 @@ class Server {
     }
 
     private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
-        console.log(name)
-        const newPlayer = new ServerPlayer(socket.id, name)
+        const newPlayer = new ServerPlayer(socket.id, name, this.gameData.bulletHouse)
         this.gameData.addNewPlayer(newPlayer)
 
         ServerSocketEventsHelper.sendPlayerLoggedIn(socket, newPlayer)
@@ -201,8 +200,9 @@ class Server {
         const gameData = this.gameData
         gameData.update()
 
+        const digestedData: GameDataDTO = gameData.createDigestedData()
         for (let socket of this.gameDataReceivingSockets) {
-            ServerSocketEventsHelper.sendGameData(socket, gameData)
+            ServerSocketEventsHelper.sendGameData(socket, digestedData)
         }
 
         // recursively call myself
