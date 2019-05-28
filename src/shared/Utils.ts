@@ -60,4 +60,21 @@ export default class Utils {
     static map(value: number, in_min: number, in_max: number, out_min: number, out_max: number): number {
         return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
     }
+
+    static distance(x1: number, y1: number, x2: number, y2: number): number {
+        return Math.hypot(x2-x1, y2-y1)
+    }
+    // returns true iff the line from (x11, y11)->(x12, y12) intersects with (x21, y21)->(x22, y22)
+    static intersects(x11: number, y11: number, x12: number, y12: number, x21: number, y21: number, x22: number, y22: number) {
+        let det, gamma, lambda
+        det = (x12 - x11) * (y22 - y21) - (x22 - x21) * (y12 - y11)
+        if (det === 0) {
+            return false
+        } else {
+            lambda = ((y22 - y21) * (x22 - x11) + (x21 - x22) * (y22 - y11)) / det
+            gamma = ((y11 - y12) * (x22 - x11) + (x12 - x11) * (y22 - y11)) / det
+            return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1)
+        }
+    }
+
 }

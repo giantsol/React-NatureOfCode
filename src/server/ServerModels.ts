@@ -1,5 +1,6 @@
 import {AsteroidDTO, BulletDTO, GameDataDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
 import Utils from "../shared/Utils"
+import CollisionHelper from "../client/CollisionHelper"
 import Victor = require("victor")
 import uuid = require("uuid")
 
@@ -63,9 +64,13 @@ export class ServerGameData implements GameDataDTO {
     update(): void {
         const width = this.canvasWidth
         const height = this.canvasHeight
-        this.players.forEach(player => player.update(width, height))
+        const players = this.players
+        const asteroids = this.asteroids
+        const bulletHouse = this.bulletHouse
 
-        this.asteroids.forEach(asteroid => {
+        players.forEach(player => player.update(width, height))
+
+        asteroids.forEach(asteroid => {
             asteroid.update(width, height)
             if (asteroid.needNewTarget) {
                 const randPlayer = Utils.pickRandom(this.players)
@@ -77,11 +82,26 @@ export class ServerGameData implements GameDataDTO {
             }
         })
 
-        this.bulletHouse.update(width, height)
+        bulletHouse.update(width, height)
+
+        // 위치 업뎃 한번씩 다 거친 후 collision detection 진행
+        const usingBullets = bulletHouse.usingBullets
+        players.forEach(player => player.checkCollision(asteroids, usingBullets))
+        asteroids.forEach(asteroid => asteroid.checkCollision(usingBullets))
     }
 }
 
-export class ServerPlayer implements PlayerDTO {
+export interface CollidingObject {
+    x: number
+    y: number
+    vertices: number[][]
+    maxSize: number
+    checkCollision(...othersArray: CollidingObject[][]): void
+    isCollisionTarget(other: CollidingObject): boolean
+    processCollision(other: CollidingObject): void
+}
+
+export class ServerPlayer implements PlayerDTO, CollidingObject {
     readonly id: string
     readonly name: string
     readonly size: number = 15
@@ -89,6 +109,7 @@ export class ServerPlayer implements PlayerDTO {
     x: number = 0
     y: number = 0
     readonly vertices: number[][] = []
+    readonly maxSize = this.size
 
     private rotation = 0
     private velocity = new Victor(0, 0)
@@ -104,6 +125,8 @@ export class ServerPlayer implements PlayerDTO {
     private fireDelta = 0
 
     private bulletHouse: BulletHouse
+
+    private readonly collisionHelper = new CollisionHelper()
 
     constructor(id: string, name: string, bulletHouse: BulletHouse) {
         this.id = id
@@ -195,9 +218,32 @@ export class ServerPlayer implements PlayerDTO {
             this.y = height + r
         }
     }
+
+    checkCollision(...othersArray: CollidingObject[][]): void {
+        // todo: check collision iff myself is able to collide (e.g. not dead)
+        this.collisionHelper.checkCollision(this, othersArray, this.isCollisionTarget.bind(this), this.processCollision.bind(this))
+    }
+
+    isCollisionTarget(other: CollidingObject): boolean {
+        if (other instanceof ServerBullet && other.firerId === this.id) {
+            return false
+        }
+        return true
+    }
+
+    processCollision(other: CollidingObject): void {
+        if (other instanceof ServerBullet) {
+            console.log(`Collided with bullet: ${other}`)
+        } else if (other instanceof ServerAsteroid) {
+            console.log(`Collided with asteroid: ${other}`)
+        } else {
+            console.log(`Collided with unknown: ${other}`)
+        }
+    }
+
 }
 
-export class ServerAsteroid implements AsteroidDTO {
+export class ServerAsteroid implements AsteroidDTO, CollidingObject {
     static readonly vertexSize = 10
 
     readonly id: string = uuid()
@@ -213,7 +259,9 @@ export class ServerAsteroid implements AsteroidDTO {
     private readonly rotationDelta: number
     private readonly outsideThreshold = 50
     private velocity = new Victor(0, 0)
-    private readonly speed: number
+    private speed: number
+
+    private readonly collisionHelper = new CollisionHelper()
 
     constructor(width: number, height: number) {
         this.setRandomSpawnPoint(width, height)
@@ -246,6 +294,7 @@ export class ServerAsteroid implements AsteroidDTO {
 
     setTarget(pos: Victor): void {
         const v = pos.subtract(new Victor(this.x, this.y))
+        this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
         this.velocity = v.norm().multiplyScalar(this.speed)
         this.needNewTarget = false
     }
@@ -282,6 +331,18 @@ export class ServerAsteroid implements AsteroidDTO {
                 || y - size > height + outsideThreshold || y + size < -outsideThreshold
         }
     }
+
+    checkCollision(...othersArray: CollidingObject[][]): void {
+        this.collisionHelper.checkCollision(this, othersArray, this.isCollisionTarget.bind(this), this.processCollision.bind(this))
+    }
+
+    isCollisionTarget(other: CollidingObject): boolean {
+        return true
+    }
+
+    processCollision(other: CollidingObject): void {
+    }
+
 }
 
 export class BulletHouse {
@@ -318,16 +379,17 @@ export class BulletHouse {
     }
 }
 
-export class ServerBullet implements BulletDTO {
+export class ServerBullet implements BulletDTO, CollidingObject {
     static readonly speed = 10
 
     readonly id: string = uuid()
     x: number = 0
     y: number = 0
     heading: number = 0
-    readonly vertices: number[][] = [[0, -5], [0, 5]]
+    readonly maxSize: number = 5
+    readonly vertices: number[][] = [[0, -this.maxSize], [0, this.maxSize]]
 
-    private firerId: string | null = null
+    firerId: string | null = null
     private velocity = new Victor(0, 0)
 
     needsToBeRecycled = false
@@ -365,4 +427,18 @@ export class ServerBullet implements BulletDTO {
         this.firerId = null
         this.needsToBeRecycled = false
     }
+
+    checkCollision(...othersArray: CollidingObject[][]): void {
+        // dummy
+    }
+
+    isCollisionTarget(other: CollidingObject): boolean {
+        // dummy
+        return false
+    }
+
+    processCollision(other: CollidingObject): void {
+        // dummy
+    }
+
 }
