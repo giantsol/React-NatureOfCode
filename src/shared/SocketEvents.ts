@@ -134,3 +134,19 @@ export class RequestUnlockProjectEvent {
         return [projectNum]
     }
 }
+
+export type KilledByAsteroidEventCallback = (killedPlayer: PlayerDTO) => void
+export class KilledByAsteroidEvent {
+    static readonly key = "killed_by_asteroid"
+    static emitterParams(killedPlayer: PlayerDTO): any[] {
+        return [killedPlayer]
+    }
+}
+
+export type OtherPlayerKilledByAsteroidEventCallback = (killedPlayer: PlayerDTO) => void
+export class OtherPlayerKilledByAsteroidEvent {
+    static readonly key = "other_player_killed_by_asteroid"
+    static emitterParams(killedPlayer: PlayerDTO): any[] {
+        return [killedPlayer]
+    }
+}

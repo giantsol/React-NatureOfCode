@@ -4,8 +4,8 @@ import {
     ConnectedEventCallback,
     DisconnectedEvent,
     DisconnectedEventCallback,
-    GameDataEvent,
-    NewPlayerJoinedEvent,
+    GameDataEvent, KilledByAsteroidEvent,
+    NewPlayerJoinedEvent, OtherPlayerKilledByAsteroidEvent,
     PlayerInputEvent,
     PlayerInputEventCallback,
     PlayerLeavingGameEvent,
@@ -109,5 +109,11 @@ export class ServerSocketEventsHelper {
 
     public static subscribePlayerLeavingGameEvent(socket: Socket, callback: PlayerLeavingGameEventCallback): void {
         socket.on(PlayerLeavingGameEvent.key, callback)
+    }
+
+    public static sendKilledByAsteroidEvent(socket: Socket, killedPlayer: PlayerDTO): void {
+        socket.emit(KilledByAsteroidEvent.key, ...KilledByAsteroidEvent.emitterParams(killedPlayer))
+        socket.broadcast.emit(OtherPlayerKilledByAsteroidEvent.key,
+            ...OtherPlayerKilledByAsteroidEvent.emitterParams(killedPlayer))
     }
 }

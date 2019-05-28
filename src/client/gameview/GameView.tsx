@@ -79,6 +79,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
             ClientSocketEventsHelper.subscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
             ClientSocketEventsHelper.subscribeGameDataEvent(socket, this.onGameDataEvent)
             ClientSocketEventsHelper.subscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
+            ClientSocketEventsHelper.subscribeKilledByAsteroidEvent(socket, this.onKilledByAsteroidEvent)
+            ClientSocketEventsHelper.subscribeOtherPlayerKilledByAsteroidEvent(socket, this.onOtherPlayerKilledByAsteroidEvent)
 
             // send user inputs to server 60 frames per sec
             this.inputProcessingLoopHandler = setTimeout(this.processInputLoop, GameView.inputProcessingInterval)
@@ -131,6 +133,15 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
             { variant: 'error', autoHideDuration: 2000 })
     }
 
+    private onKilledByAsteroidEvent = (player: PlayerDTO) => {
+        this.setState({myId: null})
+    }
+
+    private onOtherPlayerKilledByAsteroidEvent = (player: PlayerDTO) => {
+        this.props.enqueueSnackbar(`Player ${player.name} killed by an asteroid`,
+            { variant: 'info', autoHideDuration: 2000 })
+    }
+
     private processInputLoop = () => {
         // send user input to the server
         ClientSocketEventsHelper.sendPlayerInput(this.props.socket, this.playerInput)
@@ -149,6 +160,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         ClientSocketEventsHelper.unsubscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
         ClientSocketEventsHelper.unsubscribeGameDataEvent(socket, this.onGameDataEvent)
         ClientSocketEventsHelper.unsubscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
+        ClientSocketEventsHelper.unsubscribeKilledByAsteroidEvent(socket, this.onKilledByAsteroidEvent)
+        ClientSocketEventsHelper.unsubscribeOtherPlayerKilledByAsteroidEvent(socket, this.onOtherPlayerKilledByAsteroidEvent)
 
         if (this.inputProcessingLoopHandler) {
             clearTimeout(this.inputProcessingLoopHandler)

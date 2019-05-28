@@ -1,9 +1,14 @@
 import {
     GameDataEvent,
     GameDataEventCallback,
+    KilledByAsteroidEvent,
+    KilledByAsteroidEventCallback,
     NewPlayerJoinedEvent,
     NewPlayerJoinedEventCallback,
-    PlayerInputEvent, PlayerLeavingGameEvent,
+    OtherPlayerKilledByAsteroidEvent,
+    OtherPlayerKilledByAsteroidEventCallback,
+    PlayerInputEvent,
+    PlayerLeavingGameEvent,
     PlayerLeftEvent,
     PlayerLeftEventCallback,
     PlayerLoggingInEvent,
@@ -116,5 +121,21 @@ export class ClientSocketEventsHelper {
 
     public static sendRequestUnlockProjectEvent(socket: SocketIOClient.Emitter, projectNum: number): void {
         socket.emit(RequestUnlockProjectEvent.key, ...RequestUnlockProjectEvent.emitterParams(projectNum))
+    }
+
+    public static subscribeKilledByAsteroidEvent(socket: SocketIOClient.Emitter, callback: KilledByAsteroidEventCallback): void {
+        socket.on(KilledByAsteroidEvent.key, callback)
+    }
+
+    public static unsubscribeKilledByAsteroidEvent(socket: SocketIOClient.Emitter, callback: KilledByAsteroidEventCallback): void {
+        socket.off(KilledByAsteroidEvent.key, callback)
+    }
+
+    public static subscribeOtherPlayerKilledByAsteroidEvent(socket: SocketIOClient.Emitter, callback: OtherPlayerKilledByAsteroidEventCallback):void {
+        socket.on(OtherPlayerKilledByAsteroidEvent.key, callback)
+    }
+
+    public static unsubscribeOtherPlayerKilledByAsteroidEvent(socket: SocketIOClient.Emitter, callback: OtherPlayerKilledByAsteroidEventCallback):void {
+        socket.off(OtherPlayerKilledByAsteroidEvent.key, callback)
     }
 }

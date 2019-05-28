@@ -17,14 +17,17 @@ export class ServerGameData implements GameDataDTO {
 
     readonly bulletHouse: BulletHouse = new BulletHouse()
 
-    constructor() {
+    private readonly arena: Arena
+
+    constructor(arena: Arena) {
         const w = this.canvasWidth
         const h = this.canvasHeight
         this.asteroids.push(
-            new ServerAsteroid(w, h),
-            new ServerAsteroid(w, h),
-            new ServerAsteroid(w, h)
+            new ServerAsteroid(w, h, true, arena),
+            new ServerAsteroid(w, h, true, arena),
+            new ServerAsteroid(w, h, true, arena)
         )
+        this.arena = arena
     }
 
     createDigestedData(): GameDataDTO {
@@ -68,6 +71,7 @@ export class ServerGameData implements GameDataDTO {
         const asteroids = this.asteroids
         const bulletHouse = this.bulletHouse
 
+        // 남아있는 애들 update
         players.forEach(player => player.update(width, height))
 
         asteroids.forEach(asteroid => {
@@ -86,9 +90,12 @@ export class ServerGameData implements GameDataDTO {
 
         // 위치 업뎃 한번씩 다 거친 후 collision detection 진행
         const usingBullets = bulletHouse.usingBullets
-        players.forEach(player => player.checkCollision(asteroids, usingBullets))
+
+        // 운석 먼저. 부딪히기 직전에 총알을 쐈으면 운석이 먼저 죽도록
         asteroids.forEach(asteroid => asteroid.checkCollision(usingBullets))
+        players.forEach(player => player.checkCollision(asteroids, usingBullets))
     }
+
 }
 
 export interface CollidingObject {
@@ -101,7 +108,11 @@ export interface CollidingObject {
     processCollision(other: CollidingObject): void
 }
 
-export class ServerPlayer implements PlayerDTO, CollidingObject {
+export interface HasLife {
+    isDead: boolean
+}
+
+export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
     readonly id: string
     readonly name: string
     readonly size: number = 15
@@ -128,13 +139,19 @@ export class ServerPlayer implements PlayerDTO, CollidingObject {
 
     private readonly collisionHelper = new CollisionHelper()
 
-    constructor(id: string, name: string, bulletHouse: BulletHouse) {
+    isDead: boolean = false
+
+    private readonly arena: Arena
+
+    constructor(id: string, name: string, bulletHouse: BulletHouse, arena: Arena) {
         this.id = id
         this.name = name
         this.bulletHouse = bulletHouse
 
         const size = this.size
         this.vertices.push([-size, size], [size, size], [0, -size])
+
+        this.arena = arena
     }
 
     createDigestedData(): PlayerDTO {
@@ -220,22 +237,25 @@ export class ServerPlayer implements PlayerDTO, CollidingObject {
     }
 
     checkCollision(...othersArray: CollidingObject[][]): void {
-        // todo: check collision iff myself is able to collide (e.g. not dead)
-        this.collisionHelper.checkCollision(this, othersArray, this.isCollisionTarget.bind(this), this.processCollision.bind(this))
+        if (!this.isDead) {
+            this.collisionHelper.checkCollision(this, othersArray, this.isCollisionTarget.bind(this), this.processCollision.bind(this))
+        }
     }
 
     isCollisionTarget(other: CollidingObject): boolean {
-        if (other instanceof ServerBullet && other.firerId === this.id) {
-            return false
+        if (other instanceof ServerBullet && other.firerId !== this.id && !other.isDead) {
+            return true
+        } else if (other instanceof ServerAsteroid && !other.isDead) {
+            return true
         }
-        return true
+        return false
     }
 
     processCollision(other: CollidingObject): void {
         if (other instanceof ServerBullet) {
-            console.log(`Collided with bullet: ${other}`)
+            this.arena.bulletKilledPlayer(<ServerBullet>other, this)
         } else if (other instanceof ServerAsteroid) {
-            console.log(`Collided with asteroid: ${other}`)
+            this.arena.asteroidKilledPlayer(<ServerAsteroid>other, this)
         } else {
             console.log(`Collided with unknown: ${other}`)
         }
@@ -243,8 +263,9 @@ export class ServerPlayer implements PlayerDTO, CollidingObject {
 
 }
 
-export class ServerAsteroid implements AsteroidDTO, CollidingObject {
-    static readonly vertexSize = 10
+export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
+    static readonly vertexSize_big = 10
+    static readonly vertexSize_small = 5
 
     readonly id: string = uuid()
     x!: number
@@ -263,21 +284,46 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject {
 
     private readonly collisionHelper = new CollisionHelper()
 
-    constructor(width: number, height: number) {
-        this.setRandomSpawnPoint(width, height)
-        this.rotationDelta = Utils.map(Math.random(), 0, 1, 0.01, 0.03)
-        this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
-        this.maxSize = Utils.randInt(80, 100)
-        this.minSize = Utils.randInt(40, 60)
+    isDead: boolean = false
 
-        const vertexCount = ServerAsteroid.vertexSize
-        for (let i = 0; i < vertexCount; i++) {
-            const angle = Utils.map(i, 0, vertexCount, 0, TWO_PI)
-            const r = Utils.randInt(this.minSize, this.maxSize)
-            const x = r * Math.cos(angle)
-            const y = r * Math.sin(angle)
-            this.vertices.push([x, y])
+    readonly isBig: boolean
+    private readonly arena: Arena
+
+    constructor(width: number, height: number, isBig: boolean, arena: Arena) {
+        this.setRandomSpawnPoint(width, height)
+        this.isBig = isBig
+
+        if (isBig) {
+            this.rotationDelta = Utils.map(Math.random(), 0, 1, 0.01, 0.03)
+            this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
+            this.maxSize = Utils.randInt(80, 100)
+            this.minSize = Utils.randInt(40, 60)
+
+            const vertexCount = ServerAsteroid.vertexSize_big
+            for (let i = 0; i < vertexCount; i++) {
+                const angle = Utils.map(i, 0, vertexCount, 0, TWO_PI)
+                const r = Utils.randInt(this.minSize, this.maxSize)
+                const x = r * Math.cos(angle)
+                const y = r * Math.sin(angle)
+                this.vertices.push([x, y])
+            }
+        } else {
+            this.rotationDelta = Utils.map(Math.random(), 0, 1, 0.05, 0.07)
+            this.speed = Utils.map(Math.random(), 0, 1, 2, 3)
+            this.maxSize = Utils.randInt(40, 60)
+            this.minSize = Utils.randInt(10, 30)
+
+            const vertexCount = ServerAsteroid.vertexSize_small
+            for (let i = 0; i < vertexCount; i++) {
+                const angle = Utils.map(i, 0, vertexCount, 0, TWO_PI)
+                const r = Utils.randInt(this.minSize, this.maxSize)
+                const x = r * Math.cos(angle)
+                const y = r * Math.sin(angle)
+                this.vertices.push([x, y])
+            }
         }
+
+        this.arena = arena
     }
 
     createDigestedData(): AsteroidDTO {
@@ -337,10 +383,16 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject {
     }
 
     isCollisionTarget(other: CollidingObject): boolean {
-        return true
+        if (other instanceof ServerBullet && !other.isDead) {
+            return true
+        }
+        return false
     }
 
     processCollision(other: CollidingObject): void {
+        if (other instanceof ServerBullet) {
+            this.arena.bulletKilledAsteroid(<ServerBullet>other, this)
+        }
     }
 
 }
@@ -379,7 +431,7 @@ export class BulletHouse {
     }
 }
 
-export class ServerBullet implements BulletDTO, CollidingObject {
+export class ServerBullet implements BulletDTO, CollidingObject, HasLife {
     static readonly speed = 10
 
     readonly id: string = uuid()
@@ -393,6 +445,10 @@ export class ServerBullet implements BulletDTO, CollidingObject {
     private velocity = new Victor(0, 0)
 
     needsToBeRecycled = false
+
+    get isDead(): boolean {
+        return this.needsToBeRecycled
+    }
 
     createDigestedData(): BulletDTO {
         return {
@@ -442,3 +498,10 @@ export class ServerBullet implements BulletDTO, CollidingObject {
     }
 
 }
+
+export interface Arena {
+    bulletKilledPlayer(bullet: ServerBullet, player: ServerPlayer): void
+    bulletKilledAsteroid(bullet: ServerBullet, asteroid: ServerAsteroid): void
+    asteroidKilledPlayer(asteroid: ServerAsteroid, player: ServerPlayer): void
+}
+

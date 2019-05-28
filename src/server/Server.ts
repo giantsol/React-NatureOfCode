@@ -1,7 +1,7 @@
 import {Request, Response} from "express"
 import {ServerSocketEventsHelper} from "./ServerSocketEventsHelper"
 import {Socket} from "socket.io"
-import {BulletHouse, ServerGameData, ServerPlayer} from "./ServerModels"
+import {Arena, ServerAsteroid, ServerBullet, ServerGameData, ServerPlayer} from "./ServerModels"
 import {GameDataDTO, PlayerInputDTO, RootMessageDTO} from "../shared/DTOs"
 
 const express = require('express')
@@ -16,11 +16,11 @@ app.get('/', (req: Request, res: Response) => {
     res.sendFile('index.html')
 })
 
-class Server {
+class Server implements Arena {
 
     static readonly gameUpdateInterval = 1000 / 60
     private gameDataReceivingSockets: Array<Socket> = []
-    private readonly gameData: ServerGameData = new ServerGameData()
+    private readonly gameData: ServerGameData = new ServerGameData(this)
 
     private projectSelectionDataReceivingSockets: Array<Socket> = []
     private readonly projectPreviews = [
@@ -97,10 +97,10 @@ class Server {
     }
 
     private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
-        const newPlayer = new ServerPlayer(socket.id, name, this.gameData.bulletHouse)
+        const newPlayer = new ServerPlayer(socket.id, name, this.gameData.bulletHouse, this)
         this.gameData.addNewPlayer(newPlayer)
 
-        ServerSocketEventsHelper.sendPlayerLoggedIn(socket, newPlayer)
+        ServerSocketEventsHelper.sendPlayerLoggedIn(socket, newPlayer.createDigestedData())
     }
 
     private onStartReceivingGameDataEvent = (socket: Socket) => {
@@ -126,7 +126,7 @@ class Server {
     private onPlayerLeavingGameEvent = (socket: Socket) => {
         const disconnectedPlayer = this.gameData.removePlayerById(socket.id)
         if (disconnectedPlayer) {
-            ServerSocketEventsHelper.sendPlayerLeft(socket, disconnectedPlayer)
+            ServerSocketEventsHelper.sendPlayerLeft(socket, disconnectedPlayer.createDigestedData())
         }
     }
 
@@ -208,6 +208,31 @@ class Server {
         // recursively call myself
         setTimeout(this.gameUpdateLoop, Server.gameUpdateInterval)
     }
+
+    asteroidKilledPlayer(asteroid: ServerAsteroid, player: ServerPlayer): void {
+        const gameData = this.gameData
+        const killedPlayer = gameData.removePlayerById(player.id)
+        if (killedPlayer) {
+            const killedPlayerSocket = this.gameDataReceivingSockets.find(socket => socket.id === killedPlayer.id)
+            if (killedPlayerSocket) {
+                ServerSocketEventsHelper.sendKilledByAsteroidEvent(killedPlayerSocket, killedPlayer.createDigestedData())
+            }
+        }
+
+        if (asteroid.isBig) {
+            // todo
+            // gameData.breakAsteroidIntoPieces(asteroid)
+        }
+    }
+
+    bulletKilledAsteroid(bullet: ServerBullet, asteroid: ServerAsteroid): void {
+
+    }
+
+    bulletKilledPlayer(bullet: ServerBullet, player: ServerPlayer): void {
+
+    }
+
 }
 
 const server = new Server()
