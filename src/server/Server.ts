@@ -97,6 +97,10 @@ class Server implements Arena {
     }
 
     private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
+        if (this.gameData.hasPlayerWithId(socket.id)) {
+            return
+        }
+
         const newPlayer = new ServerPlayer(socket.id, name, this.gameData.bulletHouse, this)
         this.gameData.addNewPlayer(newPlayer)
 

@@ -40,6 +40,10 @@ export class ServerGameData implements GameDataDTO {
         }
     }
 
+    hasPlayerWithId(id: string): boolean {
+        return this.players.findIndex(player => player.id === id) >= 0
+    }
+
     addNewPlayer(newPlayer: ServerPlayer): void {
         newPlayer.setPos(this.canvasWidth / 2, this.canvasHeight / 2)
         this.players.push(newPlayer)
