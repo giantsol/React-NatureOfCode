@@ -223,10 +223,7 @@ class Server implements Arena {
             }
         }
 
-        if (asteroid.isBig) {
-            // todo
-            // gameData.breakAsteroidIntoPieces(asteroid)
-        }
+        gameData.onAsteroidDamaged(asteroid)
     }
 
     bulletKilledAsteroid(bullet: ServerBullet, asteroid: ServerAsteroid): void {

@@ -75,7 +75,6 @@ export class ServerGameData implements GameDataDTO {
         const asteroids = this.asteroids
         const bulletHouse = this.bulletHouse
 
-        // 남아있는 애들 update
         players.forEach(player => player.update(width, height))
 
         asteroids.forEach(asteroid => {
@@ -98,6 +97,31 @@ export class ServerGameData implements GameDataDTO {
         // 운석 먼저. 부딪히기 직전에 총알을 쐈으면 운석이 먼저 죽도록
         asteroids.forEach(asteroid => asteroid.checkCollision(usingBullets))
         players.forEach(player => player.checkCollision(asteroids, usingBullets))
+    }
+
+    onAsteroidDamaged(asteroid: ServerAsteroid): void {
+        const removed = this.removeAsteroidById(asteroid.id)
+        if (removed && removed.isBig) {
+            const width = this.canvasWidth
+            const height = this.canvasHeight
+            this.asteroids.push(
+                ServerAsteroid.createPieceOf(width, height, removed),
+                ServerAsteroid.createPieceOf(width, height, removed),
+                ServerAsteroid.createPieceOf(width, height, removed),
+            )
+        }
+    }
+
+    removeAsteroidById(id: string): ServerAsteroid | null {
+        const asteroids = this.asteroids
+        const index = asteroids.findIndex(value => id == value.id)
+        if (index >= 0) {
+            const removing = asteroids[index]
+            asteroids.splice(index, 1)
+            return removing
+        } else {
+            return null
+        }
     }
 
 }
@@ -293,6 +317,18 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
     readonly isBig: boolean
     private readonly arena: Arena
 
+    static createPieceOf(width: number, height: number, bigAsteroid: ServerAsteroid): ServerAsteroid {
+        const asteroid = new ServerAsteroid(width, height, false, bigAsteroid.arena)
+        asteroid.x = bigAsteroid.x + Utils.map(Math.random(), 0, 1, -10, 10)
+        asteroid.y = bigAsteroid.y + Utils.map(Math.random(), 0, 1, -10, 10)
+        asteroid.needNewTarget = false
+        asteroid.velocity = new Victor(
+            Utils.map(Math.random(), 0, 1, -1, 1),
+            Utils.map(Math.random(), 0, 1, -1, 1)
+        ).norm().multiplyScalar(asteroid.speed)
+        return asteroid
+    }
+
     constructor(width: number, height: number, isBig: boolean, arena: Arena) {
         this.setRandomSpawnPoint(width, height)
         this.isBig = isBig
@@ -313,7 +349,7 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
             }
         } else {
             this.rotationDelta = Utils.map(Math.random(), 0, 1, 0.05, 0.07)
-            this.speed = Utils.map(Math.random(), 0, 1, 2, 3)
+            this.speed = Utils.map(Math.random(), 0, 1, 1.5, 2.5)
             this.maxSize = Utils.randInt(40, 60)
             this.minSize = Utils.randInt(10, 30)
 
@@ -344,7 +380,11 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
 
     setTarget(pos: Victor): void {
         const v = pos.subtract(new Victor(this.x, this.y))
-        this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
+        if (this.isBig) {
+            this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
+        } else {
+            this.speed = Utils.map(Math.random(), 0, 1, 1.5, 2.5)
+        }
         this.velocity = v.norm().multiplyScalar(this.speed)
         this.needNewTarget = false
     }
