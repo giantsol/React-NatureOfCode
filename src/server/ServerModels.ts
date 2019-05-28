@@ -10,8 +10,8 @@ const TWO_PI = Math.PI * 2
 export class ServerGameData implements GameDataDTO {
     readonly players: ServerPlayer[] = []
     readonly asteroids: ServerAsteroid[] = []
-    readonly canvasHeight: number = 2000
-    readonly canvasWidth: number = 2000
+    readonly canvasHeight: number = 4800
+    readonly canvasWidth: number = 4800
     // unused. implement가 성사하도록 있는 더미
     bullets: BulletDTO[] = []
 

@@ -66,7 +66,7 @@ export class ClientGameData implements GameDataDTO {
 
     private readonly cp5: CustomP5Methods
 
-    private readonly scaleRatio = 1.5
+    private readonly scaleRatio = 3.6
 
     constructor(cp5: CustomP5Methods) {
         this.cp5 = cp5
