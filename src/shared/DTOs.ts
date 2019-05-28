@@ -58,4 +58,5 @@ export interface BulletDTO {
     x: number
     y: number
     heading: number
+    vertices: number[][]
 }

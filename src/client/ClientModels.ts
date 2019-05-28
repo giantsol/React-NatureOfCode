@@ -165,12 +165,11 @@ export class ClientAsteroid implements AsteroidDTO {
 }
 
 export class ClientBullet implements BulletDTO {
-    static readonly size = 10
-
     id: string
     x: number
     y: number
     heading: number
+    readonly vertices: number[][]
 
     private readonly cp5: CustomP5Methods
 
@@ -179,6 +178,7 @@ export class ClientBullet implements BulletDTO {
         this.x = data.x
         this.y = data.y
         this.heading = data.heading
+        this.vertices = data.vertices
         this.cp5 = cp5
     }
 
@@ -197,9 +197,9 @@ export class ClientBullet implements BulletDTO {
         cp5.stroke(255)
         cp5.strokeWeight(5)
         cp5.beginShape()
-        const halfSize = ClientBullet.size
-        cp5.vertex(0, -halfSize)
-        cp5.vertex(0, halfSize)
+        const vertices = this.vertices
+        cp5.vertex(vertices[0][0], vertices[0][1])
+        cp5.vertex(vertices[1][0], vertices[1][1])
         cp5.endShape()
         cp5.restore()
     }

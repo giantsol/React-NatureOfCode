@@ -325,6 +325,7 @@ export class ServerBullet implements BulletDTO {
     x: number = 0
     y: number = 0
     heading: number = 0
+    readonly vertices: number[][] = [[0, -5], [0, 5]]
 
     private firerId: string | null = null
     private velocity = new Victor(0, 0)
@@ -336,7 +337,8 @@ export class ServerBullet implements BulletDTO {
             id: this.id,
             x: this.x,
             y: this.y,
-            heading: this.heading
+            heading: this.heading,
+            vertices: this.vertices
         }
     }
 
