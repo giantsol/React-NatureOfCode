@@ -64,6 +64,14 @@ export class ClientGameData implements GameDataDTO {
     canvasHeight: number = 0
     canvasWidth: number = 0
 
+    private readonly cp5: CustomP5Methods
+
+    private readonly scaleRatio = 1.5
+
+    constructor(cp5: CustomP5Methods) {
+        this.cp5 = cp5
+    }
+
     update(newData: GameDataDTO, cp5: CustomP5Methods): void {
         this.updatePlayers(newData.players, cp5)
         this.updateAsteroids(newData.asteroids, cp5)
@@ -97,13 +105,26 @@ export class ClientGameData implements GameDataDTO {
         )
     }
 
-    draw(ctx: CanvasRenderingContext2D, myId: string | null): void {
-        ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
+    draw(myId: string | null): void {
+        const cp5 = this.cp5
 
-        const prevFillStyle = ctx.fillStyle
-        ctx.fillStyle = 'rgb(0,0,0)'
-        ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight)
-        ctx.fillStyle = prevFillStyle
+        cp5.background(0)
+
+        const me = this.players.find(player => myId === player.id)
+        if (me) {
+            const halfWidth = this.canvasWidth / 2
+            const halfHeight = this.canvasHeight / 2
+            cp5.translate(halfWidth, halfHeight)
+            cp5.scale(this.scaleRatio)
+            const camMinX = halfWidth / this.scaleRatio
+            const camMaxX = this.canvasWidth - camMinX
+            const camX = Math.min(Math.max(me.x, camMinX), camMaxX)
+            const camMinY = halfHeight / this.scaleRatio
+            const camMaxY = this.canvasHeight - camMinY
+            const camY = Math.min(Math.max(me.y, camMinY), camMaxY)
+
+            cp5.translate(-camX, -camY)
+        }
 
         for (let asteroid of this.asteroids) {
             asteroid.draw()

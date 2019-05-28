@@ -26,7 +26,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     width = 0
     height = 0
 
-    private currentGameData: ClientGameData = new ClientGameData()
+    private currentGameData: ClientGameData = new ClientGameData(this)
 
     private readonly playerInput: PlayerInputDTO = {
         left: false,
@@ -192,8 +192,9 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
             if (this.delta > this.interval) {
                 this.then = this.now - (this.delta % this.interval)
 
+                ctx.clearRect(0, 0, this.width, this.height)
                 ctx.save()
-                gameData.draw(ctx, this.state.myId)
+                gameData.draw(this.state.myId)
                 ctx.restore()
 
                 this.updateCanvasSizeIfChanged(gameData)
@@ -408,6 +409,13 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         const context = this.canvasContext
         if (context) {
             context.save()
+        }
+    }
+
+    scale(amount: number): void {
+        const context = this.canvasContext
+        if (context) {
+            context.scale(amount, amount)
         }
     }
 

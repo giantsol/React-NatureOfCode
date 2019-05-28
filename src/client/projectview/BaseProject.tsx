@@ -368,6 +368,12 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
+    scale(amount: number): void {
+        const context = this.canvasContext
+        if (context) {
+            context.scale(amount, amount)
+        }
+    }
 
     abstract setup(): void
     abstract draw(): void

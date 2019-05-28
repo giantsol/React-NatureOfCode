@@ -33,5 +33,6 @@ export default interface CustomP5Methods {
     setDebugText(text: string): void
     save(): void
     restore(): void
+    scale(amount: number): void
 }
 
