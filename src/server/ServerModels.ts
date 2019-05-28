@@ -82,17 +82,22 @@ export class ServerGameData implements GameDataDTO {
 
         players.forEach(player => player.update(width, height))
 
-        asteroids.forEach(asteroid => {
+        for (let i = 0; i < asteroids.length; i++) {
+            const asteroid = asteroids[i]
             asteroid.update(width, height)
             if (asteroid.needNewTarget) {
-                const randPlayer = Utils.pickRandom(this.players)
-                if (randPlayer) {
-                    asteroid.setTarget(new Victor(randPlayer.x, randPlayer.y))
+                if (asteroid.isBig) {
+                    const randPlayer = Utils.pickRandom(this.players)
+                    if (randPlayer) {
+                        asteroid.setTarget(new Victor(randPlayer.x, randPlayer.y))
+                    } else {
+                        asteroid.setTarget(new Victor(Utils.randInt(0, width), Utils.randInt(0, height)))
+                    }
                 } else {
-                    asteroid.setTarget(new Victor(Utils.randInt(0, width), Utils.randInt(0, height)))
+                    asteroids.splice(i--, 1)
                 }
             }
-        })
+        }
 
         bulletHouse.update(width, height)
 
