@@ -167,6 +167,8 @@ export interface HasLife {
 }
 
 export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
+    static readonly maxSpeed = 8
+
     readonly id: string
     readonly name: string
     readonly size: number = 15
@@ -245,6 +247,9 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
         this.updateBoostingForce(this.isBoosting)
         this.acceleration.add(this.boostingForce)
         this.velocity.add(this.acceleration)
+        if (this.velocity.magnitude() > ServerPlayer.maxSpeed) {
+            this.velocity.norm().multiplyScalar(ServerPlayer.maxSpeed)
+        }
         this.velocity.multiplyScalar(0.99)
         this.x += this.velocity.x
         this.y += this.velocity.y
