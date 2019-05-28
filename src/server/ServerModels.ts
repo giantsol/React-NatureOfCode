@@ -19,14 +19,15 @@ export class ServerGameData implements GameDataDTO {
 
     private readonly arena: Arena
 
+    private readonly minBigAsteroidCount = 5
+    private readonly bigAsteroidCountMultiplesOfPlayer = 3
+
     constructor(arena: Arena) {
         const w = this.canvasWidth
         const h = this.canvasHeight
-        this.asteroids.push(
-            new ServerAsteroid(w, h, true, arena),
-            new ServerAsteroid(w, h, true, arena),
-            new ServerAsteroid(w, h, true, arena)
-        )
+        for (let i = 0; i < this.minBigAsteroidCount; i++) {
+            this.asteroids.push(new ServerAsteroid(w, h, true, arena))
+        }
         this.arena = arena
     }
 
@@ -101,6 +102,19 @@ export class ServerGameData implements GameDataDTO {
         // 운석 먼저. 부딪히기 직전에 총알을 쐈으면 운석이 먼저 죽도록
         asteroids.forEach(asteroid => asteroid.checkCollision(usingBullets))
         players.forEach(player => player.checkCollision(asteroids, usingBullets))
+
+        // 부족한 운석 수 보충
+        const neededBigAsteroidCount = Math.max(this.minBigAsteroidCount, players.length * this.bigAsteroidCountMultiplesOfPlayer)
+        const curBigAsteroidCount = asteroids.filter(a => a.isBig).length
+        if (curBigAsteroidCount < neededBigAsteroidCount) {
+            const count = neededBigAsteroidCount - curBigAsteroidCount
+            const w = this.canvasWidth
+            const h = this.canvasHeight
+            const arena = this.arena
+            for (let i = 0; i < count; i++) {
+                asteroids.push(new ServerAsteroid(w, h, true, arena))
+            }
+        }
     }
 
     onAsteroidDamaged(asteroid: ServerAsteroid): void {
@@ -210,9 +224,9 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
         this.isBoosting = playerInput.up
 
         if (playerInput.left) {
-            this.rotation = -0.1
+            this.rotation = -0.08
         } else if (playerInput.right) {
-            this.rotation = 0.1
+            this.rotation = 0.08
         } else if (!playerInput.left && !playerInput.right) {
             this.rotation = 0
         }

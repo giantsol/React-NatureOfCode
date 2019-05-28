@@ -228,8 +228,14 @@ class Server implements Arena {
 
     bulletKilledAsteroid(bullet: ServerBullet, asteroid: ServerAsteroid): void {
         const gameData = this.gameData
+        if (bullet.firerId) {
+            const firer = gameData.getPlayerWithId(bullet.firerId)
+            if (firer && !firer.isDead) {
+                gameData.onAsteroidDamaged(asteroid)
+            }
+        }
+
         gameData.recycleBulletById(bullet.id)
-        gameData.onAsteroidDamaged(asteroid)
     }
 
     bulletKilledPlayer(bullet: ServerBullet, player: ServerPlayer): void {
@@ -237,7 +243,7 @@ class Server implements Arena {
         if (bullet.firerId) {
             const firer = gameData.getPlayerWithId(bullet.firerId)
             const killedPlayer = gameData.removePlayerById(player.id)
-            if (firer && killedPlayer) {
+            if (firer && !firer.isDead && killedPlayer) {
                 const killedPlayerSocket = this.gameDataReceivingSockets.find(socket => socket.id === killedPlayer.id)
                 if (killedPlayerSocket) {
                     ServerSocketEventsHelper.sendKilledByPlayerEvent(killedPlayerSocket,
