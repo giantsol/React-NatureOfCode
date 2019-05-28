@@ -2,11 +2,13 @@ import {
     GameDataEvent,
     GameDataEventCallback,
     KilledByAsteroidEvent,
-    KilledByAsteroidEventCallback,
+    KilledByAsteroidEventCallback, KilledByPlayerEvent, KilledByPlayerEventCallback,
     NewPlayerJoinedEvent,
     NewPlayerJoinedEventCallback,
     OtherPlayerKilledByAsteroidEvent,
     OtherPlayerKilledByAsteroidEventCallback,
+    OtherPlayerKilledByPlayerEvent,
+    OtherPlayerKilledByPlayerEventCallback,
     PlayerInputEvent,
     PlayerLeavingGameEvent,
     PlayerLeftEvent,
@@ -137,5 +139,21 @@ export class ClientSocketEventsHelper {
 
     public static unsubscribeOtherPlayerKilledByAsteroidEvent(socket: SocketIOClient.Emitter, callback: OtherPlayerKilledByAsteroidEventCallback):void {
         socket.off(OtherPlayerKilledByAsteroidEvent.key, callback)
+    }
+
+    public static subscribeKilledByPlayerEvent(socket: SocketIOClient.Emitter, callback: KilledByPlayerEventCallback): void {
+        socket.on(KilledByPlayerEvent.key, callback)
+    }
+
+    public static unsubscribeKilledByPlayerEvent(socket: SocketIOClient.Emitter, callback: KilledByPlayerEventCallback): void {
+        socket.off(KilledByPlayerEvent.key, callback)
+    }
+
+    public static subscribeOtherPlayerKilledByPlayerEvent(socket: SocketIOClient.Emitter, callback: OtherPlayerKilledByPlayerEventCallback):void {
+        socket.on(OtherPlayerKilledByPlayerEvent.key, callback)
+    }
+
+    public static unsubscribeOtherPlayerKilledByPlayerEvent(socket: SocketIOClient.Emitter, callback: OtherPlayerKilledByPlayerEventCallback):void {
+        socket.off(OtherPlayerKilledByPlayerEvent.key, callback)
     }
 }

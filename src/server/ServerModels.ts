@@ -44,6 +44,10 @@ export class ServerGameData implements GameDataDTO {
         return this.players.findIndex(player => player.id === id) >= 0
     }
 
+    getPlayerWithId(id: string): ServerPlayer | null {
+        return this.players.find(player => player.id === id) || null
+    }
+
     addNewPlayer(newPlayer: ServerPlayer): void {
         newPlayer.setPos(this.canvasWidth / 2, this.canvasHeight / 2)
         this.players.push(newPlayer)
@@ -124,6 +128,9 @@ export class ServerGameData implements GameDataDTO {
         }
     }
 
+    recycleBulletById(id: string): void {
+        this.bulletHouse.recycleBulletById(id)
+    }
 }
 
 export interface CollidingObject {
@@ -473,6 +480,16 @@ export class BulletHouse {
             }
         }
     }
+
+    recycleBulletById(id: string): void {
+        const index = this.usingBullets.findIndex(bullet => bullet.id === id)
+        if (index >= 0) {
+            const b = this.usingBullets[index]
+            b.prepareRecycle()
+            this.recycledBullets.push(b)
+            this.usingBullets.splice(index, 1)
+        }
+    }
 }
 
 export class ServerBullet implements BulletDTO, CollidingObject, HasLife {
@@ -524,6 +541,10 @@ export class ServerBullet implements BulletDTO, CollidingObject, HasLife {
     }
 
     prepareRecycle(): void {
+        this.x = -1000
+        this.y = -1000
+        this.heading = 0
+        this.velocity.multiplyScalar(0)
         this.firerId = null
         this.needsToBeRecycled = false
     }

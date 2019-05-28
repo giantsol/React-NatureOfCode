@@ -81,6 +81,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
             ClientSocketEventsHelper.subscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
             ClientSocketEventsHelper.subscribeKilledByAsteroidEvent(socket, this.onKilledByAsteroidEvent)
             ClientSocketEventsHelper.subscribeOtherPlayerKilledByAsteroidEvent(socket, this.onOtherPlayerKilledByAsteroidEvent)
+            ClientSocketEventsHelper.subscribeKilledByPlayerEvent(socket, this.onKilledByPlayerEvent)
+            ClientSocketEventsHelper.subscribeOtherPlayerKilledByPlayerEvent(socket, this.onOtherPlayerKilledByPlayerEvent)
 
             // send user inputs to server 60 frames per sec
             this.inputProcessingLoopHandler = setTimeout(this.processInputLoop, GameView.inputProcessingInterval)
@@ -142,6 +144,15 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
             { variant: 'info', autoHideDuration: 2000 })
     }
 
+    private onKilledByPlayerEvent = (killer: PlayerDTO, killed: PlayerDTO) => {
+        this.setState({myId: null})
+    }
+
+    private onOtherPlayerKilledByPlayerEvent = (killer: PlayerDTO, killed: PlayerDTO) => {
+        this.props.enqueueSnackbar(`Player ${killer.name} killed ${killed.name}!`,
+            { variant: 'success', autoHideDuration: 2000 })
+    }
+
     private processInputLoop = () => {
         // send user input to the server
         ClientSocketEventsHelper.sendPlayerInput(this.props.socket, this.playerInput)
@@ -162,6 +173,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         ClientSocketEventsHelper.unsubscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
         ClientSocketEventsHelper.unsubscribeKilledByAsteroidEvent(socket, this.onKilledByAsteroidEvent)
         ClientSocketEventsHelper.unsubscribeOtherPlayerKilledByAsteroidEvent(socket, this.onOtherPlayerKilledByAsteroidEvent)
+        ClientSocketEventsHelper.unsubscribeKilledByPlayerEvent(socket, this.onKilledByPlayerEvent)
+        ClientSocketEventsHelper.unsubscribeOtherPlayerKilledByPlayerEvent(socket, this.onOtherPlayerKilledByPlayerEvent)
 
         if (this.inputProcessingLoopHandler) {
             clearTimeout(this.inputProcessingLoopHandler)

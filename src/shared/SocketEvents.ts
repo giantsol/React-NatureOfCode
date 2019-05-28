@@ -150,3 +150,19 @@ export class OtherPlayerKilledByAsteroidEvent {
         return [killedPlayer]
     }
 }
+
+export type KilledByPlayerEventCallback = (killer: PlayerDTO, killed: PlayerDTO) => void
+export class KilledByPlayerEvent {
+    static readonly key = "killed_by_player"
+    static emitterParams(killer: PlayerDTO, killed: PlayerDTO): any[] {
+        return [killer, killed]
+    }
+}
+
+export type OtherPlayerKilledByPlayerEventCallback = (killer: PlayerDTO, killed: PlayerDTO) => void
+export class OtherPlayerKilledByPlayerEvent {
+    static readonly key = "other_player_killed_by_player"
+    static emitterParams(killer: PlayerDTO, killed: PlayerDTO): any[] {
+        return [killer, killed]
+    }
+}
