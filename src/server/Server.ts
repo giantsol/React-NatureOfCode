@@ -10,7 +10,11 @@ const http = require('http').Server(app)
 const io = require('socket.io')(http)
 const port = process.env.PORT || '8080'
 
-app.use(express.static('build_dev'))
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static('build'))
+} else {
+    app.use(express.static('build_dev'))
+}
 
 app.get('/', (req: Request, res: Response) => {
     res.sendFile('index.html')
