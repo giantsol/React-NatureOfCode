@@ -449,6 +449,14 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         }
     }
 
+    rect(x1: number, y1: number, x2: number, y2: number): void {
+        const context = this.canvasContext
+        if (context) {
+            context.fillRect(x1, y1, x2, y2)
+            context.strokeRect(x1, y1, x2, y2)
+        }
+    }
+
 }
 
 export default withSnackbar(GameView)

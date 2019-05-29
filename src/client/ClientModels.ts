@@ -130,6 +130,7 @@ export class ClientGameData implements GameDataDTO {
 
         cp5.background(0)
 
+        cp5.save()
         const me = this.players.find(player => myId === player.id)
         if (me) {
             const halfWidth = this.canvasWidth / 2
@@ -157,6 +158,21 @@ export class ClientGameData implements GameDataDTO {
         for (let player of this.players) {
             player.draw(myId === player.id)
         }
+        cp5.restore()
+
+        // minimap
+        cp5.save()
+        cp5.translate(this.canvasWidth, this.canvasHeight)
+        cp5.translate(-this.canvasWidth / 5, -this.canvasHeight / 5)
+        cp5.fill(0)
+        cp5.stroke(255)
+        cp5.strokeWeight(4)
+        cp5.rect(0, 0, this.canvasWidth / 5, this.canvasHeight / 5)
+        cp5.scale(0.2)
+        if (this.players.length > 0) {
+            this.players[0].draw(true)
+        }
+        cp5.restore()
     }
 }
 

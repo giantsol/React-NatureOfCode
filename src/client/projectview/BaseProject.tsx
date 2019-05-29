@@ -384,6 +384,14 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
+    rect(x1: number, y1: number, x2: number, y2: number): void {
+        const context = this.canvasContext
+        if (context) {
+            context.fillRect(x1, y1, x2, y2)
+            context.strokeRect(x1, y1, x2, y2)
+        }
+    }
+
     abstract setup(): void
     abstract draw(): void
 }
