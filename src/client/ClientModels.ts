@@ -19,6 +19,8 @@ export class ClientPlayer implements PlayerDTO {
 
     private readonly cp5: CustomP5Methods
 
+    showTail: boolean
+
     constructor(data: PlayerDTO, cp5: CustomP5Methods) {
         this.id = data.id
         this.name = data.name
@@ -28,12 +30,14 @@ export class ClientPlayer implements PlayerDTO {
         this.y = data.y
         this.vertices = data.vertices
         this.cp5 = cp5
+        this.showTail = data.showTail
     }
 
     update(newData: PlayerDTO): void {
         this.x = newData.x
         this.y = newData.y
         this.heading = newData.heading
+        this.showTail = newData.showTail
     }
 
     draw(isMe: boolean): void {
@@ -53,6 +57,15 @@ export class ClientPlayer implements PlayerDTO {
         p5.triangle(vertices[0][0], vertices[0][1],
             vertices[1][0], vertices[1][1],
             vertices[2][0], vertices[2][1])
+
+        if (this.showTail) {
+            p5.strokeWeight(3)
+            p5.translate(0, this.size)
+            p5.rotate(Utils.map(Math.random(), 0, 1, Math.PI / 4, 3 * Math.PI / 4))
+            p5.line(0, 0, this.size * 1.3, 0)
+            p5.restore()
+        }
+
         p5.restore()
     }
 }

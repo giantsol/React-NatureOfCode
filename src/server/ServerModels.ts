@@ -199,6 +199,8 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
 
     private readonly arena: Arena
 
+    showTail = false
+
     constructor(id: string, name: string, bulletHouse: BulletHouse, arena: Arena) {
         this.id = id
         this.name = name
@@ -218,7 +220,8 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
             y: this.y,
             size: this.size,
             heading: this.heading,
-            vertices: this.vertices
+            vertices: this.vertices,
+            showTail: this.showTail
         }
     }
 
@@ -268,6 +271,8 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
                 this.bulletHouse.fireBullet(this.id, this.x, this.y, this.heading)
             }
         }
+
+        this.showTail = this.velocity.magnitude() > 1
     }
 
     private updateBoostingForce(isBoosting: boolean): void {

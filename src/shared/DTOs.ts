@@ -14,6 +14,7 @@ export interface PlayerDTO {
     size: number
     heading: number
     vertices: number[][]
+    showTail: boolean
 }
 
 export interface AsteroidDTO {
