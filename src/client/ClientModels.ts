@@ -44,6 +44,13 @@ export class ClientPlayer implements PlayerDTO {
         const p5 = this.cp5
         p5.save()
         p5.translate(this.x, this.y)
+
+        p5.save()
+        p5.translate(0, -this.size * 2)
+        p5.fill(255)
+        p5.text(this.name, 0, 0, 24)
+        p5.restore()
+
         p5.rotate(this.heading - HALF_PI)
         if (isMe) {
             p5.fill(255, 0, 0)
@@ -59,6 +66,7 @@ export class ClientPlayer implements PlayerDTO {
             vertices[2][0], vertices[2][1])
 
         if (this.showTail) {
+            p5.save()
             p5.strokeWeight(3)
             p5.translate(0, this.size)
             p5.rotate(Utils.map(Math.random(), 0, 1, Math.PI / 4, 3 * Math.PI / 4))

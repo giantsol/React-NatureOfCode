@@ -440,6 +440,15 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         }
     }
 
+    text(text: string, x: number, y: number, size: number): void {
+        const context = this.canvasContext
+        if (context) {
+            context.font = `${size}px roboto`
+            context.textAlign = 'center'
+            context.fillText(text, x, y)
+        }
+    }
+
 }
 
 export default withSnackbar(GameView)

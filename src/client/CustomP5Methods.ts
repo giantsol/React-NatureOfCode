@@ -34,5 +34,6 @@ export default interface CustomP5Methods {
     save(): void
     restore(): void
     scale(amount: number): void
+    text(text: string, x: number, y: number, size: number): void
 }
 

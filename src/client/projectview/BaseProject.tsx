@@ -375,6 +375,15 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
+    text(text: string, x: number, y: number, size: number): void {
+        const context = this.canvasContext
+        if (context) {
+            context.font = `${size}px roboto`
+            context.textAlign = 'center'
+            context.fillText(text, x, y)
+        }
+    }
+
     abstract setup(): void
     abstract draw(): void
 }
