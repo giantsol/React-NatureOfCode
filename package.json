@@ -86,8 +86,8 @@
     "workbox-webpack-plugin": "4.2.0"
   },
   "scripts": {
-    "start": "npm run build_dev && node -r ts-node/register src/server/server.ts",
-    "start:production": "npm run build && node -r ts-node/register src/server/server.ts",
+    "start": "npm run build_dev && node -r ts-node/register src/server/Server.ts",
+    "start:production": "npm run build && node -r ts-node/register src/server/Server.ts",
     "start:watch": "nodemon",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js",
