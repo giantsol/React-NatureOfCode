@@ -8,7 +8,7 @@ const express = require('express')
 const app = express()
 const http = require('http').Server(app)
 const io = require('socket.io')(http)
-const port = 8080
+const port = process.env.PORT || '8080'
 
 app.use(express.static('build_dev'))
 
@@ -34,7 +34,7 @@ class Server implements Arena {
 
     private readonly rootPassword = "2052"
 
-    start(port: number): void {
+    start(port: string): void {
         http.listen(port, () => {
             console.info(`Listening on port ${port}`)
         })

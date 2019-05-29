@@ -1,6 +1,11 @@
 {
   "name": "nature-of-code-examples",
   "version": "0.1.0",
+  "author": "Hansol Lee",
+  "license": "MIT",
+  "engines": {
+    "node": "10.4.0"
+  },
   "private": true,
   "dependencies": {
     "@babel/core": "7.4.3",
@@ -82,6 +87,7 @@
   },
   "scripts": {
     "start": "npm run build_dev && node -r ts-node/register src/server/server.ts",
+    "start:production": "npm run build && node -r ts-node/register src/server/server.ts",
     "start:watch": "nodemon",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js",
