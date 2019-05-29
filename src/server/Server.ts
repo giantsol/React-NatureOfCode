@@ -3,6 +3,7 @@ import {ServerSocketEventsHelper} from "./ServerSocketEventsHelper"
 import {Socket} from "socket.io"
 import {Arena, ServerAsteroid, ServerBullet, ServerGameData, ServerPlayer} from "./ServerModels"
 import {GameDataDTO, PlayerInputDTO, RootMessageDTO} from "../shared/DTOs"
+import {RGBColor} from "react-color"
 
 const paths = require('../../config/paths');
 const express = require('express')
@@ -48,8 +49,8 @@ class Server implements Arena {
     }
 
     private subscribeSocketEvents(socket: Socket): void {
-        ServerSocketEventsHelper.subscribePlayerLoggingInEvent(socket, name => {
-            this.onPlayerLoggingInEvent(socket, name)
+        ServerSocketEventsHelper.subscribePlayerLoggingInEvent(socket, (name, color) => {
+            this.onPlayerLoggingInEvent(socket, name, color)
         })
 
         ServerSocketEventsHelper.subscribeDisconnectedEvent(socket, () => {
@@ -97,12 +98,12 @@ class Server implements Arena {
         })
     }
 
-    private onPlayerLoggingInEvent = (socket: Socket, name: string) => {
+    private onPlayerLoggingInEvent = (socket: Socket, name: string, color: RGBColor) => {
         if (this.gameData.hasPlayerWithId(socket.id)) {
             return
         }
 
-        const newPlayer = new ServerPlayer(socket.id, name, this.gameData.bulletHouse, this)
+        const newPlayer = new ServerPlayer(socket.id, name, color, this.gameData.bulletHouse, this)
         this.gameData.addNewPlayer(newPlayer)
 
         ServerSocketEventsHelper.sendPlayerLoggedIn(socket, newPlayer.createDigestedData())

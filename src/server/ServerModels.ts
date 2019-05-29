@@ -3,6 +3,7 @@ import Utils from "../shared/Utils"
 import CollisionHelper from "../client/CollisionHelper"
 import Victor = require("victor")
 import uuid = require("uuid")
+import {RGBColor} from "react-color"
 
 const HALF_PI = Math.PI / 2
 const TWO_PI = Math.PI * 2
@@ -171,6 +172,7 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
 
     readonly id: string
     readonly name: string
+    readonly color: RGBColor
     readonly size: number = 15
     heading: number = HALF_PI
     x: number = 0
@@ -201,9 +203,10 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
 
     showTail = false
 
-    constructor(id: string, name: string, bulletHouse: BulletHouse, arena: Arena) {
+    constructor(id: string, name: string, color: RGBColor, bulletHouse: BulletHouse, arena: Arena) {
         this.id = id
         this.name = name
+        this.color = color
         this.bulletHouse = bulletHouse
 
         const size = this.size
@@ -216,6 +219,7 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
         return {
             id: this.id,
             name: this.name,
+            color: this.color,
             x: this.x,
             y: this.y,
             size: this.size,
@@ -268,7 +272,7 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
                 this.then = this.now
 
                 // fire bullet!
-                this.bulletHouse.fireBullet(this.id, this.x, this.y, this.heading)
+                this.bulletHouse.fireBullet(this.id, this.x, this.y, this.heading, this.color)
             }
         }
 
@@ -481,9 +485,9 @@ export class BulletHouse {
     private readonly recycledBullets: ServerBullet[] = []
     readonly usingBullets: ServerBullet[] = []
 
-    fireBullet(firerId: string, x: number, y: number, heading: number): void {
+    fireBullet(firerId: string, x: number, y: number, heading: number, color: RGBColor): void {
         const bullet = this.createOrGetBullet()
-        bullet.setInitValues(firerId, x, y, heading)
+        bullet.setInitValues(firerId, x, y, heading, color)
         this.usingBullets.push(bullet)
     }
 
@@ -533,6 +537,7 @@ export class ServerBullet implements BulletDTO, CollidingObject, HasLife {
 
     firerId: string | null = null
     private velocity = new Victor(0, 0)
+    color = { r: 255, g: 255, b: 255 }
 
     needsToBeRecycled = false
 
@@ -546,16 +551,18 @@ export class ServerBullet implements BulletDTO, CollidingObject, HasLife {
             x: this.x,
             y: this.y,
             heading: this.heading,
-            vertices: this.vertices
+            vertices: this.vertices,
+            color: this.color
         }
     }
 
-    setInitValues(firerId: string, x: number, y: number, heading: number): void {
+    setInitValues(firerId: string, x: number, y: number, heading: number, color: RGBColor): void {
         this.firerId = firerId
         this.x = x
         this.y = y
         this.heading = heading
         this.velocity = new Victor(1, 1).rotateBy(heading + HALF_PI).norm().multiplyScalar(ServerBullet.speed)
+        this.color = color
     }
 
     update(width: number, height: number): void {

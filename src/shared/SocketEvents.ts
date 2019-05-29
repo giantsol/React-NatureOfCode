@@ -6,6 +6,7 @@ import {
     RootMessageDTO
 } from "./DTOs"
 import {Socket} from "socket.io"
+import {RGBColor} from "react-color"
 
 export type ConnectedEventCallback = (socket: Socket) => void
 export class ConnectedEvent {
@@ -30,11 +31,11 @@ export class NewPlayerJoinedEvent {
     }
 }
 
-export type PlayerLoggingInEventCallback = (name: string) => void
+export type PlayerLoggingInEventCallback = (name: string, color: RGBColor) => void
 export class PlayerLoggingInEvent {
     static readonly key = "player_logging_in"
-    static emitterParams(name: string): any[] {
-        return [name]
+    static emitterParams(name: string, color: RGBColor): any[] {
+        return [name, color]
     }
 }
 

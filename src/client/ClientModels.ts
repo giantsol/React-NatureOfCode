@@ -1,6 +1,7 @@
 import {AsteroidDTO, BulletDTO, GameDataDTO, PlayerDTO} from "../shared/DTOs"
 import CustomP5Methods from "./CustomP5Methods"
 import Utils from "../shared/Utils"
+import {RGBColor} from "react-color"
 
 const HALF_PI = Math.PI / 2
 const TWO_PI = Math.PI * 2
@@ -11,6 +12,7 @@ export class ClientPlayer implements PlayerDTO {
 
     readonly id: string
     readonly name: string
+    readonly color: RGBColor
     readonly size: number
     heading: number
     x: number
@@ -24,6 +26,7 @@ export class ClientPlayer implements PlayerDTO {
     constructor(data: PlayerDTO, cp5: CustomP5Methods) {
         this.id = data.id
         this.name = data.name
+        this.color = data.color
         this.size = data.size
         this.heading = data.heading
         this.x = data.x
@@ -52,13 +55,9 @@ export class ClientPlayer implements PlayerDTO {
         p5.restore()
 
         p5.rotate(this.heading - HALF_PI)
-        if (isMe) {
-            p5.fill(255, 0, 0)
-            p5.stroke(255, 0, 0)
-        } else {
-            p5.fill(255)
-            p5.stroke(255)
-        }
+        const color = this.color
+        p5.fill(color.r, color.g, color.b)
+        p5.stroke(color.r, color.g, color.b)
 
         const vertices = this.vertices
         p5.triangle(vertices[0][0], vertices[0][1],
@@ -212,6 +211,7 @@ export class ClientBullet implements BulletDTO {
     y: number
     heading: number
     readonly vertices: number[][]
+    color: RGBColor
 
     private readonly cp5: CustomP5Methods
 
@@ -222,12 +222,14 @@ export class ClientBullet implements BulletDTO {
         this.heading = data.heading
         this.vertices = data.vertices
         this.cp5 = cp5
+        this.color = data.color
     }
 
     update(data: BulletDTO) {
         this.x = data.x
         this.y = data.y
         this.heading = data.heading
+        this.color = data.color
     }
 
     draw() {
@@ -236,7 +238,7 @@ export class ClientBullet implements BulletDTO {
         cp5.translate(this.x, this.y)
         cp5.rotate(this.heading - HALF_PI)
         cp5.noFill()
-        cp5.stroke(255)
+        cp5.stroke(this.color.r, this.color.g, this.color.b)
         cp5.strokeWeight(5)
         cp5.beginShape()
         const vertices = this.vertices

@@ -2,7 +2,9 @@ import {
     GameDataEvent,
     GameDataEventCallback,
     KilledByAsteroidEvent,
-    KilledByAsteroidEventCallback, KilledByPlayerEvent, KilledByPlayerEventCallback,
+    KilledByAsteroidEventCallback,
+    KilledByPlayerEvent,
+    KilledByPlayerEventCallback,
     NewPlayerJoinedEvent,
     NewPlayerJoinedEventCallback,
     OtherPlayerKilledByAsteroidEvent,
@@ -30,6 +32,7 @@ import {
     YouLoggedInEventCallback
 } from "../shared/SocketEvents"
 import {PlayerInputDTO} from "../shared/DTOs"
+import {RGBColor} from "react-color"
 
 export class ClientSocketEventsHelper {
 
@@ -57,8 +60,8 @@ export class ClientSocketEventsHelper {
         socket.off(GameDataEvent.key, callback)
     }
 
-    public static sendLoggingInEvent(socket: SocketIOClient.Emitter, name: string): void {
-        socket.emit(PlayerLoggingInEvent.key, ...PlayerLoggingInEvent.emitterParams(name))
+    public static sendLoggingInEvent(socket: SocketIOClient.Emitter, name: string, color: RGBColor): void {
+        socket.emit(PlayerLoggingInEvent.key, ...PlayerLoggingInEvent.emitterParams(name, color))
     }
 
     public static startReceivingGameData(socket: SocketIOClient.Emitter): void {

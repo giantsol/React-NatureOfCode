@@ -1,3 +1,5 @@
+import {RGBColor} from "react-color"
+
 export interface GameDataDTO {
     players: PlayerDTO[]
     asteroids: AsteroidDTO[]
@@ -9,6 +11,7 @@ export interface GameDataDTO {
 export interface PlayerDTO {
     id: string
     name: string
+    color: RGBColor
     x: number
     y: number
     size: number
@@ -60,4 +63,5 @@ export interface BulletDTO {
     y: number
     heading: number
     vertices: number[][]
+    color: RGBColor
 }

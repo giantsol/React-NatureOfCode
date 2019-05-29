@@ -6,6 +6,7 @@ import DialogTitle from "@material-ui/core/DialogTitle"
 import DialogContent from "@material-ui/core/DialogContent"
 import TextField from "@material-ui/core/TextField"
 import DialogActions from "@material-ui/core/DialogActions"
+import {CirclePicker, ColorResult, RGBColor} from "react-color"
 
 interface Props {
     socket: SocketIOClient.Emitter
@@ -14,13 +15,20 @@ interface Props {
 
 interface State {
     inputName: string
+    color: RGBColor
 }
 
 export default class LogInView extends React.Component<Props, State> {
 
     constructor(props: Props) {
         super(props)
-        this.state = {inputName: ''}
+        this.state = {inputName: '',
+            color: {
+                r: 255,
+                g: 255,
+                b: 255
+            }
+        }
     }
 
     componentDidMount(): void {
@@ -44,6 +52,7 @@ export default class LogInView extends React.Component<Props, State> {
                         <TextField id="name" name="name" autoFocus
                                    margin="dense" label="Nickname" fullWidth
                                    value={this.state.inputName} onChange={this.onInputChanged}/>
+                        <CirclePicker color={this.state.color} onChange={this.onColorChanged}/>
                     </DialogContent>
                     <DialogActions>
                         <Button type="submit" fullWidth variant="contained" color="primary">확인</Button>
@@ -57,8 +66,12 @@ export default class LogInView extends React.Component<Props, State> {
         this.setState({inputName: (event.target as HTMLInputElement).value})
     }
 
+    private onColorChanged = (color: ColorResult) => {
+        this.setState({color: color.rgb})
+    }
+
     private onLogInButtonClicked = (event: FormEvent) => {
         event.preventDefault()
-        ClientSocketEventsHelper.sendLoggingInEvent(this.props.socket, this.state.inputName)
+        ClientSocketEventsHelper.sendLoggingInEvent(this.props.socket, this.state.inputName, this.state.color)
     }
 }
