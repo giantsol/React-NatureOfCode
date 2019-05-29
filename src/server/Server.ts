@@ -4,20 +4,17 @@ import {Socket} from "socket.io"
 import {Arena, ServerAsteroid, ServerBullet, ServerGameData, ServerPlayer} from "./ServerModels"
 import {GameDataDTO, PlayerInputDTO, RootMessageDTO} from "../shared/DTOs"
 
+const paths = require('../../config/paths');
 const express = require('express')
 const app = express()
 const http = require('http').Server(app)
 const io = require('socket.io')(http)
 const port = process.env.PORT || '8080'
 
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static('build'))
-} else {
-    app.use(express.static('build_dev'))
-}
+app.use(express.static('build'))
 
 app.get('/', (req: Request, res: Response) => {
-    res.sendFile('index.html')
+    res.sendFile(paths.appHtml, { root: paths.appBuild })
 })
 
 class Server implements Arena {
