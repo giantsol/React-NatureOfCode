@@ -6,6 +6,7 @@ import {withSnackbar} from 'notistack'
 import {WithSnackbarProps} from "notistack/build"
 import LogInView from "./LogInView"
 import CustomP5Methods from "../CustomP5Methods"
+import './GameView.css'
 
 interface Props extends WithSnackbarProps {
     socket: SocketIOClient.Emitter
@@ -13,6 +14,7 @@ interface Props extends WithSnackbarProps {
 
 interface State {
     myId: string | null
+    canvasFitHeight: boolean
 }
 
 class GameView extends React.Component<Props, State> implements CustomP5Methods {
@@ -45,13 +47,14 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
 
     constructor(props: Props) {
         super(props)
-        this.state = { myId: null }
+        this.state = { myId: null, canvasFitHeight: true }
     }
 
     render() {
+        const divStyle = this.state.canvasFitHeight ? "fitHeight" : "fitWidth"
         return (
             <div style={{width: "100vw", height: "100vh", backgroundColor: "black"}}>
-                <div style={{width: "100vh", height: "100vh", margin: "auto", position: "relative"}}>
+                <div className={divStyle} style={{position: "relative"}}>
                     <canvas ref={this.canvasRef} width={this.width} height={this.height}
                             style={{width: "100%", height: "100%", display: "block", border: '2px solid white'}}>
                         Fallback text for old browsers.
@@ -86,38 +89,52 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
 
             // send user inputs to server 60 frames per sec
             this.inputProcessingLoopHandler = setTimeout(this.processInputLoop, GameView.inputProcessingInterval)
-            document.addEventListener('keydown', event => {
-                switch (event.code) {
-                    case "ArrowLeft":
-                        this.playerInput.left = true
-                        break
-                    case "ArrowRight":
-                        this.playerInput.right = true
-                        break
-                    case "ArrowUp":
-                        this.playerInput.up = true
-                        break
-                    case 'Space':
-                        this.playerInput.fire = true
-                        break
-                }
-            })
-            document.addEventListener('keyup', event => {
-                switch (event.code) {
-                    case "ArrowLeft":
-                        this.playerInput.left = false
-                        break
-                    case "ArrowRight":
-                        this.playerInput.right = false
-                        break
-                    case "ArrowUp":
-                        this.playerInput.up = false
-                        break
-                    case 'Space':
-                        this.playerInput.fire = false
-                        break
-                }
-            })
+            document.addEventListener('keydown', this.onKeyDownEvent)
+            document.addEventListener('keyup', this.onKeyUpEvent)
+            window.addEventListener('resize', this.onWindowResizeEvent)
+        }
+    }
+
+    private onKeyDownEvent = (event: KeyboardEvent) => {
+        switch (event.code) {
+            case "ArrowLeft":
+                this.playerInput.left = true
+                break
+            case "ArrowRight":
+                this.playerInput.right = true
+                break
+            case "ArrowUp":
+                this.playerInput.up = true
+                break
+            case 'Space':
+                this.playerInput.fire = true
+                break
+        }
+    }
+
+    private onKeyUpEvent = (event: KeyboardEvent) => {
+        switch (event.code) {
+            case "ArrowLeft":
+                this.playerInput.left = false
+                break
+            case "ArrowRight":
+                this.playerInput.right = false
+                break
+            case "ArrowUp":
+                this.playerInput.up = false
+                break
+            case 'Space':
+                this.playerInput.fire = false
+                break
+        }
+    }
+
+    private onWindowResizeEvent = () => {
+        const w = window.innerWidth
+        const h = window.innerHeight
+        const fitHeight = w >= h
+        if (this.state.canvasFitHeight != fitHeight) {
+            this.setState({canvasFitHeight: fitHeight})
         }
     }
 
@@ -175,6 +192,10 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         ClientSocketEventsHelper.unsubscribeOtherPlayerKilledByAsteroidEvent(socket, this.onOtherPlayerKilledByAsteroidEvent)
         ClientSocketEventsHelper.unsubscribeKilledByPlayerEvent(socket, this.onKilledByPlayerEvent)
         ClientSocketEventsHelper.unsubscribeOtherPlayerKilledByPlayerEvent(socket, this.onOtherPlayerKilledByPlayerEvent)
+
+        document.removeEventListener('keydown', this.onKeyDownEvent)
+        document.removeEventListener('keyup', this.onKeyUpEvent)
+        window.removeEventListener('resize', this.onWindowResizeEvent)
 
         if (this.inputProcessingLoopHandler) {
             clearTimeout(this.inputProcessingLoopHandler)
