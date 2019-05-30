@@ -158,7 +158,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         const w = window.innerWidth
         const h = window.innerHeight
         const fitHeight = w >= h
-        if (this.state.canvasFitHeight != fitHeight) {
+        if (this.state.canvasFitHeight !== fitHeight) {
             this.setState({canvasFitHeight: fitHeight})
         }
     }
@@ -214,6 +214,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
 
                 ctx.clearRect(0, 0, this.width, this.height)
                 ctx.save()
+                ctx.translate(0.5, 0.5)
                 gameData.draw(this.state.myId)
                 ctx.restore()
 
@@ -448,11 +449,11 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         }
     }
 
-    rect(x1: number, y1: number, x2: number, y2: number): void {
+    rect(x1: number, y1: number, w: number, h: number): void {
         const context = this.canvasContext
         if (context) {
-            context.fillRect(x1, y1, x2, y2)
-            context.strokeRect(x1, y1, x2, y2)
+            context.fillRect(x1, y1, w, h)
+            context.strokeRect(x1, y1, w, h)
         }
     }
 

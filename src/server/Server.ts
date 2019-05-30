@@ -2,12 +2,7 @@ import {Request, Response} from "express"
 import {ServerSocketEventsHelper} from "./ServerSocketEventsHelper"
 import {Socket} from "socket.io"
 import {Arena, ServerAsteroid, ServerBullet, ServerGameData, ServerPlayer} from "./ServerModels"
-import {
-    GameDataDTO,
-    PlayerInputDTO,
-    ProjectPreviewDTO,
-    ProjectSelectionMessageDTO
-} from "../shared/DTOs"
+import {PlayerInputDTO, ProjectPreviewDTO, ProjectSelectionMessageDTO} from "../shared/DTOs"
 import {RGBColor} from "react-color"
 
 const paths = require('../../config/paths');
@@ -47,8 +42,8 @@ class Server implements Arena {
         })
 
         ServerSocketEventsHelper.subscribeConnectedEvent(io, socket => {
-            console.log(`gameDataReceivingSocket count: ${this.gameDataReceivingSockets.length}, projectSelectionDataReceivingSocket count: ${this.projectSelectionDataReceivingSockets.length}`)
             this.subscribeSocketEvents(socket)
+            console.log(`gameDataReceivingSocket count: ${this.gameDataReceivingSockets.length}, projectSelectionDataReceivingSocket count: ${this.projectSelectionDataReceivingSockets.length}`)
         })
 
         setTimeout(this.gameUpdateLoop, Server.gameUpdateInterval)
@@ -60,8 +55,8 @@ class Server implements Arena {
         })
 
         ServerSocketEventsHelper.subscribeDisconnectedEvent(socket, () => {
-            console.log(`gameDataReceivingSocket count: ${this.gameDataReceivingSockets.length}, projectSelectionDataReceivingSocket count: ${this.projectSelectionDataReceivingSockets.length}`)
             this.onDisconnectedEvent(socket)
+            console.log(`gameDataReceivingSocket count: ${this.gameDataReceivingSockets.length}, projectSelectionDataReceivingSocket count: ${this.projectSelectionDataReceivingSockets.length}`)
         })
 
         ServerSocketEventsHelper.subscribePlayerLeavingGameEvent(socket, () => {
@@ -232,7 +227,7 @@ class Server implements Arena {
             }
         }
 
-        gameData.onAsteroidDamaged(asteroid)
+        gameData.breakAsteroid(asteroid)
     }
 
     bulletKilledAsteroid(bullet: ServerBullet, asteroid: ServerAsteroid): void {
@@ -240,7 +235,8 @@ class Server implements Arena {
         if (bullet.firerId) {
             const firer = gameData.getPlayerWithId(bullet.firerId)
             if (firer) {
-                gameData.onAsteroidDamaged(asteroid)
+                gameData.breakAsteroid(asteroid)
+                firer.increaseAsteroidPoint()
             }
         }
 
@@ -257,6 +253,7 @@ class Server implements Arena {
                 if (killedPlayerSocket) {
                     ServerSocketEventsHelper.sendKilledByPlayerEvent(killedPlayerSocket, firer.toDTO(), killedPlayer.toDTO())
                 }
+                firer.increaseKillingPoint()
             }
         }
 

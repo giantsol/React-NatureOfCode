@@ -1,4 +1,11 @@
-import {AsteroidDTO, BulletDTO, GameDataDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
+import {
+    AsteroidDTO,
+    BulletDTO,
+    GameDataDTO,
+    PlayerDTO,
+    PlayerInputDTO,
+    PlayerPointsDTO
+} from "../shared/DTOs"
 import Utils from "../shared/Utils"
 import CollisionHelper from "../client/CollisionHelper"
 import {RGBColor} from "react-color"
@@ -123,7 +130,7 @@ export class ServerGameData implements GameDataDTO {
         }
     }
 
-    onAsteroidDamaged(asteroid: ServerAsteroid): void {
+    breakAsteroid(asteroid: ServerAsteroid): void {
         const removed = this.removeAsteroidById(asteroid.id)
         if (removed && removed.isBig) {
             const width = this.canvasWidth
@@ -178,6 +185,7 @@ export class ServerPlayer implements PlayerDTO, CollidingObject {
     color: RGBColor
     heading: number = Constants.HALF_PI
     showTail = false
+    readonly points: PlayerPointsDTO = { asteroidPoint: 0, killingPoint: 0 }
 
     private rotation = 0
     private readonly velocity = new Victor(0, 0)
@@ -223,7 +231,8 @@ export class ServerPlayer implements PlayerDTO, CollidingObject {
             size: this.size,
             heading: this.heading,
             vertices: this.vertices,
-            showTail: this.showTail
+            showTail: this.showTail,
+            points: this.points
         }
     }
 
@@ -338,6 +347,14 @@ export class ServerPlayer implements PlayerDTO, CollidingObject {
         } else {
             console.log(`Collided with unknown: ${other}`)
         }
+    }
+
+    increaseAsteroidPoint(): void {
+        this.points.asteroidPoint++
+    }
+
+    increaseKillingPoint(): void {
+        this.points.killingPoint++
     }
 
 }

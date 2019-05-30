@@ -1,4 +1,4 @@
-import {AsteroidDTO, BulletDTO, GameDataDTO, PlayerDTO} from "../shared/DTOs"
+import {AsteroidDTO, BulletDTO, GameDataDTO, PlayerDTO, PlayerPointsDTO} from "../shared/DTOs"
 import CustomP5Methods from "./CustomP5Methods"
 import Utils from "../shared/Utils"
 import {RGBColor} from "react-color"
@@ -19,6 +19,7 @@ export class ClientPlayer implements PlayerDTO {
     x: number
     y: number
     showTail: boolean
+    points: PlayerPointsDTO
 
     constructor(data: PlayerDTO, cp5: CustomP5Methods) {
         this.id = data.id
@@ -33,6 +34,7 @@ export class ClientPlayer implements PlayerDTO {
         this.x = data.x
         this.y = data.y
         this.showTail = data.showTail
+        this.points = data.points
     }
 
     update(newData: PlayerDTO): void {
@@ -41,6 +43,7 @@ export class ClientPlayer implements PlayerDTO {
         this.heading = newData.heading
         this.showTail = newData.showTail
         this.color = newData.color
+        this.points = newData.points
     }
 
     draw(isMe: boolean): void {
@@ -57,7 +60,7 @@ export class ClientPlayer implements PlayerDTO {
 
         const color = this.color
         p5.fill(color.r, color.g, color.b)
-        p5.stroke(255)
+        p5.stroke(color.r, color.g, color.b)
 
         p5.rotate(this.heading - Constants.HALF_PI)
         const vertices = this.vertices
@@ -93,6 +96,14 @@ export class ClientGameData implements GameDataDTO {
     private playerViewMaxX: number = 0
     private playerViewMinY: number = 0
     private playerViewMaxY: number = 0
+
+    private readonly pointsVerticalSpacing = 200
+    private readonly pointsHorizontalSpacing1 = 600
+    private readonly pointsHorizontalSpacing2 = 400
+    private readonly pointsTextSize = 100
+    private readonly labelNickname = '닉네임'
+    private readonly labelAsteroidPoint = '운석파괴'
+    private readonly labelKillingPoint = 'PK'
 
     constructor(cp5: CustomP5Methods) {
         this.cp5 = cp5
@@ -165,19 +176,59 @@ export class ClientGameData implements GameDataDTO {
         }
         cp5.restore()
 
+        // player points
+        const players = this.players
+        players.sort((a, b) => (b.points.asteroidPoint + b.points.killingPoint) - (a.points.asteroidPoint + a.points.killingPoint))
+        cp5.save()
+        cp5.translate(400, 200)
+        const verticalSpacing = this.pointsVerticalSpacing
+        const horizontalSpacing1 = this.pointsHorizontalSpacing1
+        const horizontalSpacing2 = this.pointsHorizontalSpacing2
+        const textSize = this.pointsTextSize
+        const count = Math.min(players.length, 5)
+        if (count > 0) {
+            // draw header
+            cp5.save()
+            cp5.fill(255)
+            cp5.text(this.labelNickname, 0, 0, textSize)
+            cp5.translate(horizontalSpacing1, 0)
+            cp5.text(this.labelAsteroidPoint, 0, 0, textSize)
+            cp5.translate(horizontalSpacing2, 0)
+            cp5.text(this.labelKillingPoint, 0, 0, textSize)
+            cp5.restore()
+        }
+        for (let i = 0; i < count; i++) {
+            const player = players[i]
+            cp5.save()
+            cp5.translate(0, verticalSpacing * (i + 1))
+            if (i === 0) {
+                cp5.fill(255, 0, 0)
+            } else {
+                cp5.fill(255)
+            }
+            cp5.text(player.name, 0, 0, textSize)
+            cp5.translate(horizontalSpacing1, 0)
+            cp5.text(`${player.points.asteroidPoint}`, 0, 0, textSize)
+            cp5.translate(horizontalSpacing2, 0)
+            cp5.text(`${player.points.killingPoint}`, 0, 0, textSize)
+            cp5.restore()
+        }
+        cp5.restore()
+
         // minimap
         cp5.save()
         cp5.translate(this.canvasWidth, this.canvasHeight)
         cp5.translate(-this.canvasWidth / 5, -this.canvasHeight / 5)
         cp5.fill(0)
         cp5.stroke(255)
-        cp5.strokeWeight(4)
+        cp5.strokeWeight(8)
         cp5.rect(0, 0, this.canvasWidth / 5, this.canvasHeight / 5)
         cp5.scale(0.2)
         if (this.players.length > 0) {
             this.players[0].draw(true)
         }
         cp5.restore()
+
     }
 }
 
