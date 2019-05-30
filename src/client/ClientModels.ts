@@ -12,7 +12,7 @@ export class ClientPlayer implements PlayerDTO {
 
     readonly id: string
     readonly name: string
-    readonly color: RGBColor
+    color: RGBColor
     readonly size: number
     heading: number
     x: number
@@ -41,6 +41,7 @@ export class ClientPlayer implements PlayerDTO {
         this.y = newData.y
         this.heading = newData.heading
         this.showTail = newData.showTail
+        this.color = newData.color
     }
 
     draw(isMe: boolean): void {
@@ -57,7 +58,7 @@ export class ClientPlayer implements PlayerDTO {
         p5.rotate(this.heading - HALF_PI)
         const color = this.color
         p5.fill(color.r, color.g, color.b)
-        p5.stroke(color.r, color.g, color.b)
+        p5.stroke(255)
 
         const vertices = this.vertices
         p5.triangle(vertices[0][0], vertices[0][1],
@@ -66,6 +67,7 @@ export class ClientPlayer implements PlayerDTO {
 
         if (this.showTail) {
             p5.save()
+            p5.stroke(color.r, color.g, color.b)
             p5.strokeWeight(3)
             p5.translate(0, this.size)
             p5.rotate(Utils.map(Math.random(), 0, 1, Math.PI / 4, 3 * Math.PI / 4))

@@ -1,9 +1,9 @@
 import {AsteroidDTO, BulletDTO, GameDataDTO, PlayerDTO, PlayerInputDTO} from "../shared/DTOs"
 import Utils from "../shared/Utils"
 import CollisionHelper from "../client/CollisionHelper"
+import {RGBColor} from "react-color"
 import Victor = require("victor")
 import uuid = require("uuid")
-import {RGBColor} from "react-color"
 
 const HALF_PI = Math.PI / 2
 const TWO_PI = Math.PI * 2
@@ -172,7 +172,8 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
 
     readonly id: string
     readonly name: string
-    readonly color: RGBColor
+    readonly originalColor: RGBColor
+    color: RGBColor
     readonly size: number = 15
     heading: number = HALF_PI
     x: number = 0
@@ -203,9 +204,16 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
 
     showTail = false
 
+    private invincibleCountdown = 255
+
+    get isInvincible(): boolean {
+        return this.invincibleCountdown > 0
+    }
+
     constructor(id: string, name: string, color: RGBColor, bulletHouse: BulletHouse, arena: Arena) {
         this.id = id
         this.name = name
+        this.originalColor = { r: color.r, g: color.g, b: color.b }
         this.color = color
         this.bulletHouse = bulletHouse
 
@@ -277,6 +285,18 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
         }
 
         this.showTail = this.velocity.magnitude() > 1
+
+        if (this.invincibleCountdown > 0) {
+            this.invincibleCountdown -= 1
+        }
+
+        if (this.invincibleCountdown > 0) {
+            this.color.r = Utils.randInt(Utils.map(this.invincibleCountdown, 0, 255, this.originalColor.r, 0), this.originalColor.r)
+            this.color.g = Utils.randInt(Utils.map(this.invincibleCountdown, 0, 255, this.originalColor.g, 0), this.originalColor.g)
+            this.color.b = Utils.randInt(Utils.map(this.invincibleCountdown, 0, 255, this.originalColor.b, 0), this.originalColor.b)
+        } else {
+            this.color = this.originalColor
+        }
     }
 
     private updateBoostingForce(isBoosting: boolean): void {
@@ -305,7 +325,7 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
     }
 
     checkCollision(...othersArray: CollidingObject[][]): void {
-        if (!this.isDead) {
+        if (!this.isDead && !this.isInvincible) {
             this.collisionHelper.checkCollision(this, othersArray, this.isCollisionTarget.bind(this), this.processCollision.bind(this))
         }
     }
