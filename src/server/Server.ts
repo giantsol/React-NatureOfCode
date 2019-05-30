@@ -247,13 +247,15 @@ class Server implements Arena {
         const gameData = this.gameData
         if (bullet.firerId) {
             const firer = gameData.getPlayerWithId(bullet.firerId)
-            const killedPlayer = gameData.removePlayerById(player.id)
-            if (firer && killedPlayer) {
-                const killedPlayerSocket = this.gameDataReceivingSockets.find(socket => socket.id === killedPlayer.id)
-                if (killedPlayerSocket) {
-                    ServerSocketEventsHelper.sendKilledByPlayerEvent(killedPlayerSocket, firer.toDTO(), killedPlayer.toDTO())
+            if (firer) {
+                const killedPlayer = gameData.removePlayerById(player.id)
+                if (killedPlayer) {
+                    const killedPlayerSocket = this.gameDataReceivingSockets.find(socket => socket.id === killedPlayer.id)
+                    if (killedPlayerSocket) {
+                        ServerSocketEventsHelper.sendKilledByPlayerEvent(killedPlayerSocket, firer.toDTO(), killedPlayer.toDTO())
+                    }
+                    firer.increaseKillingPoint()
                 }
-                firer.increaseKillingPoint()
             }
         }
 

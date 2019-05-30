@@ -113,8 +113,15 @@ export class ServerGameData implements GameDataDTO {
         const bullets = bulletHouse.bullets
 
         // 운석 먼저. 부딪히기 직전에 총알을 쐈으면 운석이 먼저 죽도록
-        asteroids.forEach(asteroid => asteroid.checkCollision(bullets))
-        players.forEach(player => player.checkCollision(asteroids, bullets))
+        let i = asteroids.length
+        while (i--) {
+            asteroids[i].checkCollision(bullets)
+        }
+
+        i = players.length
+        while (i--) {
+            players[i].checkCollision(asteroids, bullets)
+        }
 
         // 부족한 운석 수 보충
         const neededBigAsteroidCount = Math.max(this.minBigAsteroidCount, players.length * this.bigAsteroidCountMultiplesOfPlayer)
