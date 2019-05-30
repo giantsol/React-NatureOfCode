@@ -182,7 +182,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     }
 
     private onOtherPlayerKilledByAsteroidEvent = (player: PlayerDTO) => {
-        this.props.enqueueSnackbar(`\u2604 \u2620 ${player.name}`,
+        this.props.enqueueSnackbar(`\u2604 \u2694 ${player.name}`,
             { variant: 'info', autoHideDuration: 1500 })
     }
 
@@ -191,7 +191,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     }
 
     private onOtherPlayerKilledByPlayerEvent = (killer: PlayerDTO, killed: PlayerDTO) => {
-        this.props.enqueueSnackbar(`${killer.name} \u2620 ${killed.name}`,
+        this.props.enqueueSnackbar(`${killer.name} \u2694 ${killed.name}`,
             { variant: 'info', autoHideDuration: 1500 })
     }
 

@@ -46,7 +46,26 @@ export class ClientPlayer implements PlayerDTO {
         this.points = newData.points
     }
 
-    draw(isMe: boolean): void {
+    drawMinimapVersion(scaleFactor: number, isMe: boolean): void {
+        const p5 = this.cp5
+        p5.save()
+        p5.translate(this.x * scaleFactor, this.y * scaleFactor)
+
+        const color = this.color
+        const size = this.size * scaleFactor * 12
+        p5.fill(color.r, color.g, color.b)
+        p5.stroke(color.r, color.g, color.b)
+        p5.ellipse(0, 0, size, size)
+
+        if (isMe) {
+            p5.fill(255, 0, 0)
+            p5.text('🌟', 0, 0, 80)
+        }
+
+        p5.restore()
+    }
+
+    draw(): void {
         const p5 = this.cp5
         p5.save()
         p5.translate(this.x, this.y)
@@ -104,6 +123,8 @@ export class ClientGameData implements GameDataDTO {
     private readonly labelNickname = '닉네임'
     private readonly labelAsteroidPoint = '운석파괴'
     private readonly labelKillingPoint = 'PK'
+
+    private readonly minimapScaleFactor = 0.2
 
     constructor(cp5: CustomP5Methods) {
         this.cp5 = cp5
@@ -172,7 +193,7 @@ export class ClientGameData implements GameDataDTO {
         }
 
         for (let player of this.players) {
-            player.draw(myId === player.id)
+            player.draw()
         }
         cp5.restore()
 
@@ -218,14 +239,16 @@ export class ClientGameData implements GameDataDTO {
         // minimap
         cp5.save()
         cp5.translate(this.canvasWidth, this.canvasHeight)
-        cp5.translate(-this.canvasWidth / 5, -this.canvasHeight / 5)
+        const scaleFactor = this.minimapScaleFactor
+        const minimapWidth = this.canvasWidth * scaleFactor
+        const minimapHeight = this.canvasHeight * scaleFactor
+        cp5.translate(-minimapWidth, -minimapHeight)
         cp5.fill(0)
         cp5.stroke(255)
         cp5.strokeWeight(8)
-        cp5.rect(0, 0, this.canvasWidth / 5, this.canvasHeight / 5)
-        cp5.scale(0.2)
-        if (this.players.length > 0) {
-            this.players[0].draw(true)
+        cp5.rect(0, 0, minimapWidth, minimapHeight)
+        for (let player of players) {
+            player.drawMinimapVersion(scaleFactor, player.id === (me && me.id))
         }
         cp5.restore()
 
