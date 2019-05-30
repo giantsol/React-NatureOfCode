@@ -50,7 +50,7 @@ export default class LogInView extends React.Component<Props, State> {
                     <DialogTitle>로그인</DialogTitle>
                     <DialogContent>
                         <TextField id="name" name="name" autoFocus
-                                   margin="dense" label="Nickname" fullWidth
+                                   margin="dense" label="Nickname" fullWidth required
                                    value={this.state.inputName} onChange={this.onInputChanged}/>
                         <CirclePicker color={this.state.color} onChange={this.onColorChanged}/>
                     </DialogContent>
@@ -63,7 +63,11 @@ export default class LogInView extends React.Component<Props, State> {
     }
 
     private onInputChanged = (event: ChangeEvent) => {
-        this.setState({inputName: (event.target as HTMLInputElement).value})
+        let value = (event.target as HTMLInputElement).value
+        if (value.length > 10) {
+            value = value.substr(0, 10)
+        }
+        this.setState({inputName: value})
     }
 
     private onColorChanged = (color: ColorResult) => {
