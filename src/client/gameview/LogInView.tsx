@@ -63,7 +63,7 @@ export default class LogInView extends React.Component<Props, State> {
     }
 
     private onInputChanged = (event: ChangeEvent) => {
-        let value = (event.target as HTMLInputElement).value
+        let value = (event.target as HTMLInputElement).value.trim()
         if (value.length > 10) {
             value = value.substr(0, 10)
         }
