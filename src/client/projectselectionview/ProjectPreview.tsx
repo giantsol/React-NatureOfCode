@@ -11,8 +11,8 @@ import {ClientSocketEventsHelper} from "../ClientSocketEventsHelper"
 
 interface Props {
     socket: SocketIOClient.Emitter
-    num: number
-    name: string
+    projectNum: number
+    title: string
     isOpen: boolean
     isRoot: boolean
 }
@@ -24,17 +24,17 @@ export default class ProjectPreview extends React.Component<Props, any> {
             return (
                 <Grid item xs={12} sm={6} lg={3}>
                     <Card>
-                        <Link to={`/project/${this.props.num}`}>
+                        <Link to={`/project/${this.props.projectNum}`}>
                             <CardActionArea>
                                 <CardMedia
                                     component="img"
                                     image="/static/images/tempcard.jpg"
-                                    title={this.props.name}
+                                    title={this.props.title}
                                     style={{height: "140px"}}
                                 />
                                 <CardContent>
                                     <Typography variant="h5" component="h2">
-                                        {this.props.name}
+                                        {this.props.title}
                                     </Typography>
                                 </CardContent>
                             </CardActionArea>
@@ -54,12 +54,12 @@ export default class ProjectPreview extends React.Component<Props, any> {
                             <CardMedia
                                 component="img"
                                 image="/static/images/tempcard.jpg"
-                                title={this.props.name}
+                                title={this.props.title}
                                 style={{height: "140px"}}
                             />
                             <CardContent>
                                 <Typography variant="h5" component="h2">
-                                    {this.props.name}
+                                    {this.props.title}
                                 </Typography>
                             </CardContent>
                             <Typography align="center" variant="h3" color="error"
@@ -83,10 +83,10 @@ export default class ProjectPreview extends React.Component<Props, any> {
     }
 
     private onClickLockButton = () => {
-        ClientSocketEventsHelper.sendRequestLockProjectEvent(this.props.socket, this.props.num)
+        ClientSocketEventsHelper.sendRequestLockProjectEvent(this.props.socket, this.props.projectNum)
     }
 
     private onClickUnlockButton = () => {
-        ClientSocketEventsHelper.sendRequestUnlockProjectEvent(this.props.socket, this.props.num)
+        ClientSocketEventsHelper.sendRequestUnlockProjectEvent(this.props.socket, this.props.projectNum)
     }
 }

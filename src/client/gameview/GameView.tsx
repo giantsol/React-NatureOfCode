@@ -18,7 +18,7 @@ interface State {
 }
 
 class GameView extends React.Component<Props, State> implements CustomP5Methods {
-    private static readonly inputProcessingInterval = 1000 / 60
+    private static readonly sendInputInterval = 1000 / 60
 
     private readonly canvasRef = createRef<HTMLCanvasElement>()
     private canvasContext: CanvasRenderingContext2D | null = null
@@ -36,7 +36,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         up: false,
         fire: false
     }
-    private inputProcessingLoopHandler: NodeJS.Timeout | null = null
+    private sendInputLoopHandler: NodeJS.Timeout | null = null
 
     // framerate 관련 변수들
     private fps = 60
@@ -88,10 +88,35 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
             ClientSocketEventsHelper.subscribeOtherPlayerKilledByPlayerEvent(socket, this.onOtherPlayerKilledByPlayerEvent)
 
             // send user inputs to server 60 frames per sec
-            this.inputProcessingLoopHandler = setTimeout(this.processInputLoop, GameView.inputProcessingInterval)
+            this.sendInputLoopHandler = setTimeout(this.sendInputLoop, GameView.sendInputInterval)
             document.addEventListener('keydown', this.onKeyDownEvent)
             document.addEventListener('keyup', this.onKeyUpEvent)
             window.addEventListener('resize', this.onWindowResizeEvent)
+        }
+    }
+
+    componentWillUnmount(): void {
+        this.canvasContext = null
+        const socket = this.props.socket
+        ClientSocketEventsHelper.sendPlayerLeavingGameEvent(socket)
+        ClientSocketEventsHelper.stopReceivingGameData(socket)
+        ClientSocketEventsHelper.unsubscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
+        ClientSocketEventsHelper.unsubscribeGameDataEvent(socket, this.onGameDataEvent)
+        ClientSocketEventsHelper.unsubscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
+        ClientSocketEventsHelper.unsubscribeKilledByAsteroidEvent(socket, this.onKilledByAsteroidEvent)
+        ClientSocketEventsHelper.unsubscribeOtherPlayerKilledByAsteroidEvent(socket, this.onOtherPlayerKilledByAsteroidEvent)
+        ClientSocketEventsHelper.unsubscribeKilledByPlayerEvent(socket, this.onKilledByPlayerEvent)
+        ClientSocketEventsHelper.unsubscribeOtherPlayerKilledByPlayerEvent(socket, this.onOtherPlayerKilledByPlayerEvent)
+
+        document.removeEventListener('keydown', this.onKeyDownEvent)
+        document.removeEventListener('keyup', this.onKeyUpEvent)
+        window.removeEventListener('resize', this.onWindowResizeEvent)
+
+        if (this.requestAnimationFrameHandler) {
+            window.cancelAnimationFrame(this.requestAnimationFrameHandler)
+        }
+        if (this.sendInputLoopHandler) {
+            clearTimeout(this.sendInputLoopHandler)
         }
     }
 
@@ -139,8 +164,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     }
 
     private onNewPlayerJoinedEvent = (player: PlayerDTO) => {
-        this.props.enqueueSnackbar(`New Player ${player.name} joined!`,
-            { variant: 'success', autoHideDuration: 2000 })
+        this.props.enqueueSnackbar(`${player.name} 가 참여했습니다`,
+            { variant: 'success', autoHideDuration: 1500 })
     }
 
     private onGameDataEvent = (gameData: GameDataDTO) => {
@@ -148,8 +173,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     }
 
     private onPlayerLeftEvent = (playerDTO: PlayerDTO) => {
-        this.props.enqueueSnackbar(`Player Left ${playerDTO.name}`,
-            { variant: 'error', autoHideDuration: 2000 })
+        this.props.enqueueSnackbar(`${playerDTO.name} 가 떠났습니다`,
+            { variant: 'success', autoHideDuration: 1500 })
     }
 
     private onKilledByAsteroidEvent = (player: PlayerDTO) => {
@@ -157,8 +182,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     }
 
     private onOtherPlayerKilledByAsteroidEvent = (player: PlayerDTO) => {
-        this.props.enqueueSnackbar(`Player ${player.name} killed by an asteroid`,
-            { variant: 'info', autoHideDuration: 2000 })
+        this.props.enqueueSnackbar(`\u2604 \u2620 ${player.name}`,
+            { variant: 'info', autoHideDuration: 1500 })
     }
 
     private onKilledByPlayerEvent = (killer: PlayerDTO, killed: PlayerDTO) => {
@@ -166,40 +191,14 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     }
 
     private onOtherPlayerKilledByPlayerEvent = (killer: PlayerDTO, killed: PlayerDTO) => {
-        this.props.enqueueSnackbar(`Player ${killer.name} killed ${killed.name}!`,
-            { variant: 'success', autoHideDuration: 2000 })
+        this.props.enqueueSnackbar(`${killer.name} \u2620 ${killed.name}`,
+            { variant: 'info', autoHideDuration: 1500 })
     }
 
-    private processInputLoop = () => {
+    private sendInputLoop = () => {
         // send user input to the server
         ClientSocketEventsHelper.sendPlayerInput(this.props.socket, this.playerInput)
-        this.inputProcessingLoopHandler = setTimeout(this.processInputLoop, GameView.inputProcessingInterval)
-    }
-
-    componentWillUnmount(): void {
-        this.canvasContext = null
-        if (this.requestAnimationFrameHandler) {
-            window.cancelAnimationFrame(this.requestAnimationFrameHandler)
-        }
-
-        const socket = this.props.socket
-        ClientSocketEventsHelper.sendPlayerLeavingGameEvent(socket)
-        ClientSocketEventsHelper.stopReceivingGameData(socket)
-        ClientSocketEventsHelper.unsubscribeNewPlayerJoinedEvent(socket, this.onNewPlayerJoinedEvent)
-        ClientSocketEventsHelper.unsubscribeGameDataEvent(socket, this.onGameDataEvent)
-        ClientSocketEventsHelper.unsubscribePlayerLeftEvent(socket, this.onPlayerLeftEvent)
-        ClientSocketEventsHelper.unsubscribeKilledByAsteroidEvent(socket, this.onKilledByAsteroidEvent)
-        ClientSocketEventsHelper.unsubscribeOtherPlayerKilledByAsteroidEvent(socket, this.onOtherPlayerKilledByAsteroidEvent)
-        ClientSocketEventsHelper.unsubscribeKilledByPlayerEvent(socket, this.onKilledByPlayerEvent)
-        ClientSocketEventsHelper.unsubscribeOtherPlayerKilledByPlayerEvent(socket, this.onOtherPlayerKilledByPlayerEvent)
-
-        document.removeEventListener('keydown', this.onKeyDownEvent)
-        document.removeEventListener('keyup', this.onKeyUpEvent)
-        window.removeEventListener('resize', this.onWindowResizeEvent)
-
-        if (this.inputProcessingLoopHandler) {
-            clearTimeout(this.inputProcessingLoopHandler)
-        }
+        this.sendInputLoopHandler = setTimeout(this.sendInputLoop, GameView.sendInputInterval)
     }
 
     private onAnimationFrame = () => {

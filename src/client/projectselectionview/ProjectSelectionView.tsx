@@ -1,6 +1,10 @@
 import React, {ChangeEvent, FormEvent} from 'react'
 import {ClientSocketEventsHelper} from "../ClientSocketEventsHelper"
-import {ProjectPreviewDTO, ProjectSelectionDataDTO, RootMessageDTO} from "../../shared/DTOs"
+import {
+    ProjectPreviewDTO,
+    ProjectSelectionDataDTO,
+    ProjectSelectionMessageDTO
+} from "../../shared/DTOs"
 import ProjectPreview from "./ProjectPreview"
 import {Grid} from "@material-ui/core"
 import Button from "@material-ui/core/Button"
@@ -11,7 +15,7 @@ import DialogContent from "@material-ui/core/DialogContent"
 import DialogActions from "@material-ui/core/DialogActions"
 import TextField from "@material-ui/core/TextField"
 
-interface Props extends WithSnackbarProps{
+interface Props extends WithSnackbarProps {
     socket: SocketIOClient.Emitter
 }
 
@@ -31,45 +35,40 @@ class ProjectSelectionView extends React.Component<Props, State> {
 
     componentDidMount(): void {
         const socket = this.props.socket
-
         ClientSocketEventsHelper.startReceivingProjectSelectionDataEvent(socket)
         ClientSocketEventsHelper.subscribeProjectSelectionDataEvent(socket, this.onProjectSelectionDataEvent)
-        ClientSocketEventsHelper.subscribeRootMessageEvent(socket, this.onRootMessageEvent)
+        ClientSocketEventsHelper.subscribeProjectSelectionMessageEvent(socket, this.onProjectSelectionMessageEvent)
+    }
+
+    componentWillUnmount(): void {
+        const socket = this.props.socket
+        ClientSocketEventsHelper.stopReceivingProjectSelectionDataEvent(socket)
+        ClientSocketEventsHelper.unsubscribeProjectSelectionDataEvent(socket, this.onProjectSelectionDataEvent)
+        ClientSocketEventsHelper.unsubscribeProjectSelectionMessageEvent(socket, this.onProjectSelectionMessageEvent)
     }
 
     private onProjectSelectionDataEvent = (projectSelectionData: ProjectSelectionDataDTO) => {
         this.setState({isRoot: projectSelectionData.isRoot, projectPreviews: projectSelectionData.previews})
     }
 
-    private onRootMessageEvent = (rootMessage: RootMessageDTO) => {
-        switch (rootMessage) {
-            case RootMessageDTO.ROOT_REQUEST_ACCEPTED:
-                this.props.enqueueSnackbar("Root accepted", { variant: 'success', autoHideDuration: 1000 })
+    private onProjectSelectionMessageEvent = (message: ProjectSelectionMessageDTO) => {
+        switch (message) {
+            case ProjectSelectionMessageDTO.ROOTED:
+                this.props.enqueueSnackbar("Rooted", { variant: 'success', autoHideDuration: 1000 })
                 break
-            case RootMessageDTO.ROOT_REQUEST_DENIED:
-                this.props.enqueueSnackbar("Root denied", { variant: 'error', autoHideDuration: 1000 })
+            case ProjectSelectionMessageDTO.UNROOTED:
+                this.props.enqueueSnackbar("Unrooted", { variant: 'success', autoHideDuration: 1000 })
                 break
-            case RootMessageDTO.UNROOTED:
-                this.props.enqueueSnackbar("Unrooted", { variant: 'info', autoHideDuration: 1000 })
-                break
-            case RootMessageDTO.PROJECT_LOCKED:
+            case ProjectSelectionMessageDTO.PROJECT_LOCKED:
                 this.props.enqueueSnackbar("Project locked", { variant: 'success', autoHideDuration: 1000 })
                 break
-            case RootMessageDTO.PROJECT_UNLOCKED:
+            case ProjectSelectionMessageDTO.PROJECT_UNLOCKED:
                 this.props.enqueueSnackbar("Project unlocked", { variant: 'success', autoHideDuration: 1000 })
                 break
-            case RootMessageDTO.PERMISSION_DENIED:
+            case ProjectSelectionMessageDTO.PERMISSION_DENIED:
                 this.props.enqueueSnackbar("Permission denied", { variant: 'error', autoHideDuration: 1000 })
                 break
         }
-    }
-
-    componentWillUnmount(): void {
-        const socket = this.props.socket
-
-        ClientSocketEventsHelper.stopReceivingProjectSelectionDataEvent(socket)
-        ClientSocketEventsHelper.unsubscribeProjectSelectionDataEvent(socket, this.onProjectSelectionDataEvent)
-        ClientSocketEventsHelper.unsubscribeRootMessageEvent(socket, this.onRootMessageEvent)
     }
 
     render() {
@@ -87,7 +86,7 @@ class ProjectSelectionView extends React.Component<Props, State> {
                     </Grid>
                     {
                         this.state.projectPreviews.map((preview: ProjectPreviewDTO) =>
-                            <ProjectPreview key={preview.name} {...preview} isRoot={this.state.isRoot} socket={this.props.socket} />
+                            <ProjectPreview key={preview.title} {...preview} isRoot={this.state.isRoot} socket={this.props.socket} />
                         )
                     }
                     <Dialog

@@ -4,8 +4,12 @@ import {
     ConnectedEventCallback,
     DisconnectedEvent,
     DisconnectedEventCallback,
-    GameDataEvent, KilledByAsteroidEvent, KilledByPlayerEvent,
-    NewPlayerJoinedEvent, OtherPlayerKilledByAsteroidEvent, OtherPlayerKilledByPlayerEvent,
+    GameDataEvent,
+    KilledByAsteroidEvent,
+    KilledByPlayerEvent,
+    NewPlayerJoinedEvent,
+    OtherPlayerKilledByAsteroidEvent,
+    OtherPlayerKilledByPlayerEvent,
     PlayerInputEvent,
     PlayerInputEventCallback,
     PlayerLeavingGameEvent,
@@ -14,6 +18,7 @@ import {
     PlayerLoggingInEvent,
     PlayerLoggingInEventCallback,
     ProjectSelectionDataEvent,
+    ProjectSelectionMessageEvent,
     RequestLockProjectEvent,
     RequestLockProjectEventCallback,
     RequestRootEvent,
@@ -22,7 +27,6 @@ import {
     RequestUnlockProjectEventCallback,
     RequestUnrootEvent,
     RequestUnrootEventCallback,
-    RootMessageEvent,
     StartReceivingGameDataEvent,
     StartReceivingGameDataEventCallback,
     StartReceivingProjectSelectionDataEvent,
@@ -33,7 +37,7 @@ import {
     StopReceivingProjectSelectionDataEventCallback,
     YouLoggedInEvent
 } from "../shared/SocketEvents"
-import {GameDataDTO, PlayerDTO, ProjectPreviewDTO, RootMessageDTO} from "../shared/DTOs"
+import {GameDataDTO, PlayerDTO, ProjectPreviewDTO, ProjectSelectionMessageDTO} from "../shared/DTOs"
 
 export class ServerSocketEventsHelper {
     public static subscribeConnectedEvent(socket: Socket, callback: ConnectedEventCallback): void {
@@ -95,8 +99,8 @@ export class ServerSocketEventsHelper {
         socket.on(RequestUnrootEvent.key, callback)
     }
 
-    public static sendRootMessageEvent(socket: Socket, rootMessage: RootMessageDTO): void {
-        socket.emit(RootMessageEvent.key, ...RootMessageEvent.emitterParams(rootMessage))
+    public static sendProjectSelectionMessageEvent(socket: Socket, message: ProjectSelectionMessageDTO): void {
+        socket.emit(ProjectSelectionMessageEvent.key, ...ProjectSelectionMessageEvent.emitterParams(message))
     }
 
     public static subscribeRequestLockProjectEvent(socket: Socket, callback: RequestLockProjectEventCallback): void {

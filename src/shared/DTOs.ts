@@ -25,8 +25,6 @@ export interface AsteroidDTO {
     x: number
     y: number
     rotation: number
-    minSize: number
-    maxSize: number
     vertices: number[][]
 }
 
@@ -43,14 +41,13 @@ export interface ProjectSelectionDataDTO {
 }
 
 export interface ProjectPreviewDTO {
-    num: number
-    name: string
+    projectNum: number
+    title: string
     isOpen: boolean
 }
 
-export enum RootMessageDTO {
-    ROOT_REQUEST_ACCEPTED,
-    ROOT_REQUEST_DENIED,
+export enum ProjectSelectionMessageDTO {
+    ROOTED,
     UNROOTED,
     PROJECT_LOCKED,
     PROJECT_UNLOCKED,

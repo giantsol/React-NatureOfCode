@@ -22,8 +22,8 @@ import {
     RequestRootEvent,
     RequestUnlockProjectEvent,
     RequestUnrootEvent,
-    RootMessageEvent,
-    RootMessageEventCallback,
+    ProjectSelectionMessageEvent,
+    ProjectSelectionMessageEventCallback,
     StartReceivingGameDataEvent,
     StartReceivingProjectSelectionDataEvent,
     StopReceivingGameDataEvent,
@@ -108,12 +108,12 @@ export class ClientSocketEventsHelper {
         socket.emit(RequestUnrootEvent.key)
     }
 
-    public static subscribeRootMessageEvent(socket: SocketIOClient.Emitter, callback: RootMessageEventCallback): void {
-        socket.on(RootMessageEvent.key, callback)
+    public static subscribeProjectSelectionMessageEvent(socket: SocketIOClient.Emitter, callback: ProjectSelectionMessageEventCallback): void {
+        socket.on(ProjectSelectionMessageEvent.key, callback)
     }
 
-    public static unsubscribeRootMessageEvent(socket: SocketIOClient.Emitter, callback: RootMessageEventCallback): void {
-        socket.off(RootMessageEvent.key, callback)
+    public static unsubscribeProjectSelectionMessageEvent(socket: SocketIOClient.Emitter, callback: ProjectSelectionMessageEventCallback): void {
+        socket.off(ProjectSelectionMessageEvent.key, callback)
     }
 
     public static sendRequestLockProjectEvent(socket: SocketIOClient.Emitter, projectNum: number): void {

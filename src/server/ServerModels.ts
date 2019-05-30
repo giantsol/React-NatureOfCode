@@ -2,11 +2,9 @@ import {AsteroidDTO, BulletDTO, GameDataDTO, PlayerDTO, PlayerInputDTO} from "..
 import Utils from "../shared/Utils"
 import CollisionHelper from "../client/CollisionHelper"
 import {RGBColor} from "react-color"
+import {Constants} from "../shared/Constants"
 import Victor = require("victor")
 import uuid = require("uuid")
-
-const HALF_PI = Math.PI / 2
-const TWO_PI = Math.PI * 2
 
 export class ServerGameData implements GameDataDTO {
     readonly players: ServerPlayer[] = []
@@ -20,23 +18,25 @@ export class ServerGameData implements GameDataDTO {
 
     private readonly arena: Arena
 
-    private readonly minBigAsteroidCount = 5
+    private readonly minBigAsteroidCount = 7
     private readonly bigAsteroidCountMultiplesOfPlayer = 3
+    private curBigAsteroidsCount = 0
 
     constructor(arena: Arena) {
         const w = this.canvasWidth
         const h = this.canvasHeight
         for (let i = 0; i < this.minBigAsteroidCount; i++) {
             this.asteroids.push(new ServerAsteroid(w, h, true, arena))
+            this.curBigAsteroidsCount++
         }
         this.arena = arena
     }
 
-    createDigestedData(): GameDataDTO {
+    toDTO(): GameDataDTO {
         return {
-            players: this.players.map(player => player.createDigestedData()),
-            asteroids: this.asteroids.map(asteroid => asteroid.createDigestedData()),
-            bullets: this.bulletHouse.usingBullets.map(bullet => bullet.createDigestedData()),
+            players: this.players.map(player => player.toDTO()),
+            asteroids: this.asteroids.map(asteroid => asteroid.toDTO()),
+            bullets: this.bulletHouse.bullets.map(bullet => bullet.toDTO()),
             canvasHeight: this.canvasHeight,
             canvasWidth: this.canvasWidth
         }
@@ -57,7 +57,7 @@ export class ServerGameData implements GameDataDTO {
 
     removePlayerById(id: string): ServerPlayer | null {
         const players = this.players
-        const index = players.findIndex(value => id == value.id)
+        const index = players.findIndex(value => id === value.id)
         if (index >= 0) {
             const removingPlayer = players[index]
             players.splice(index, 1)
@@ -68,7 +68,7 @@ export class ServerGameData implements GameDataDTO {
     }
 
     applyPlayerInput(id: string, playerInput: PlayerInputDTO): void {
-        const player = this.players.find(value => id == value.id)
+        const player = this.players.find(value => id === value.id)
         if (player) {
             player.applyInput(playerInput)
         }
@@ -90,9 +90,9 @@ export class ServerGameData implements GameDataDTO {
                 if (asteroid.isBig) {
                     const randPlayer = Utils.pickRandom(this.players)
                     if (randPlayer) {
-                        asteroid.setTarget(new Victor(randPlayer.x, randPlayer.y))
+                        asteroid.setTarget(randPlayer.x, randPlayer.y)
                     } else {
-                        asteroid.setTarget(new Victor(Utils.randInt(0, width), Utils.randInt(0, height)))
+                        asteroid.setTarget(Utils.randInt(0, width), Utils.randInt(0, height))
                     }
                 } else {
                     asteroids.splice(i--, 1)
@@ -103,22 +103,22 @@ export class ServerGameData implements GameDataDTO {
         bulletHouse.update(width, height)
 
         // 위치 업뎃 한번씩 다 거친 후 collision detection 진행
-        const usingBullets = bulletHouse.usingBullets
+        const bullets = bulletHouse.bullets
 
         // 운석 먼저. 부딪히기 직전에 총알을 쐈으면 운석이 먼저 죽도록
-        asteroids.forEach(asteroid => asteroid.checkCollision(usingBullets))
-        players.forEach(player => player.checkCollision(asteroids, usingBullets))
+        asteroids.forEach(asteroid => asteroid.checkCollision(bullets))
+        players.forEach(player => player.checkCollision(asteroids, bullets))
 
         // 부족한 운석 수 보충
         const neededBigAsteroidCount = Math.max(this.minBigAsteroidCount, players.length * this.bigAsteroidCountMultiplesOfPlayer)
-        const curBigAsteroidCount = asteroids.filter(a => a.isBig).length
-        if (curBigAsteroidCount < neededBigAsteroidCount) {
-            const count = neededBigAsteroidCount - curBigAsteroidCount
+        if (this.curBigAsteroidsCount < neededBigAsteroidCount) {
+            const count = neededBigAsteroidCount - this.curBigAsteroidsCount
             const w = this.canvasWidth
             const h = this.canvasHeight
             const arena = this.arena
             for (let i = 0; i < count; i++) {
                 asteroids.push(new ServerAsteroid(w, h, true, arena))
+                this.curBigAsteroidsCount++
             }
         }
     }
@@ -133,10 +133,11 @@ export class ServerGameData implements GameDataDTO {
                 ServerAsteroid.createPieceOf(width, height, removed),
                 ServerAsteroid.createPieceOf(width, height, removed),
             )
+            this.curBigAsteroidsCount--
         }
     }
 
-    removeAsteroidById(id: string): ServerAsteroid | null {
+    private removeAsteroidById(id: string): ServerAsteroid | null {
         const asteroids = this.asteroids
         const index = asteroids.findIndex(value => id == value.id)
         if (index >= 0) {
@@ -163,30 +164,26 @@ export interface CollidingObject {
     processCollision(other: CollidingObject): void
 }
 
-export interface HasLife {
-    isDead: boolean
-}
-
-export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
+export class ServerPlayer implements PlayerDTO, CollidingObject {
     static readonly maxSpeed = 8
 
     readonly id: string
     readonly name: string
     readonly originalColor: RGBColor
-    color: RGBColor
     readonly size: number = 15
-    heading: number = HALF_PI
+    readonly maxSize = this.size
+    readonly vertices: number[][] = []
     x: number = 0
     y: number = 0
-    readonly vertices: number[][] = []
-    readonly maxSize = this.size
+    color: RGBColor
+    heading: number = Constants.HALF_PI
+    showTail = false
 
     private rotation = 0
-    private velocity = new Victor(0, 0)
-    private acceleration = new Victor(0, 0)
-    private boostingForce = new Victor(0, 0)
+    private readonly velocity = new Victor(0, 0)
+    private readonly acceleration = new Victor(0, 0)
+    private readonly boostingForce = new Victor(0, 0)
     private isBoosting = false
-
     private isFiring = false
 
     private fireInterval = 1000 / 4
@@ -194,15 +191,9 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
     private then = Date.now()
     private fireDelta = 0
 
-    private bulletHouse: BulletHouse
-
+    private readonly bulletHouse: BulletHouse
     private readonly collisionHelper = new CollisionHelper()
-
-    isDead: boolean = false
-
     private readonly arena: Arena
-
-    showTail = false
 
     private invincibleCountdown = 255
 
@@ -219,11 +210,10 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
 
         const size = this.size
         this.vertices.push([-size, size], [size, size], [0, -size])
-
         this.arena = arena
     }
 
-    createDigestedData(): PlayerDTO {
+    toDTO(): PlayerDTO {
         return {
             id: this.id,
             name: this.name,
@@ -291,9 +281,11 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
         }
 
         if (this.invincibleCountdown > 0) {
-            this.color.r = Utils.randInt(Utils.map(this.invincibleCountdown, 0, 255, this.originalColor.r, 0), this.originalColor.r)
-            this.color.g = Utils.randInt(Utils.map(this.invincibleCountdown, 0, 255, this.originalColor.g, 0), this.originalColor.g)
-            this.color.b = Utils.randInt(Utils.map(this.invincibleCountdown, 0, 255, this.originalColor.b, 0), this.originalColor.b)
+            const countdown = this.invincibleCountdown
+            const origColor = this.originalColor
+            this.color.r = Utils.randInt(Utils.map(countdown, 0, 255, origColor.r, 0), origColor.r)
+            this.color.g = Utils.randInt(Utils.map(countdown, 0, 255, origColor.g, 0), origColor.g)
+            this.color.b = Utils.randInt(Utils.map(countdown, 0, 255, origColor.b, 0), origColor.b)
         } else {
             this.color = this.originalColor
         }
@@ -301,8 +293,7 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
 
     private updateBoostingForce(isBoosting: boolean): void {
         if (isBoosting) {
-            this.boostingForce.addScalar(5).rotateBy(this.heading + HALF_PI).normalize()
-            this.boostingForce.multiplyScalar(0.1)
+            this.boostingForce.addScalar(1).rotateBy(this.heading + Constants.HALF_PI).normalize().multiplyScalar(0.1)
         } else {
             this.boostingForce.multiplyScalar(0)
         }
@@ -325,15 +316,15 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
     }
 
     checkCollision(...othersArray: CollidingObject[][]): void {
-        if (!this.isDead && !this.isInvincible) {
+        if (!this.isInvincible) {
             this.collisionHelper.checkCollision(this, othersArray, this.isCollisionTarget.bind(this), this.processCollision.bind(this))
         }
     }
 
     isCollisionTarget(other: CollidingObject): boolean {
-        if (other instanceof ServerBullet && other.firerId !== this.id && !other.isDead) {
+        if (other instanceof ServerBullet && other.firerId !== this.id && !other.needsToBeRecycled) {
             return true
-        } else if (other instanceof ServerAsteroid && !other.isDead) {
+        } else if (other instanceof ServerAsteroid) {
             return true
         }
         return false
@@ -351,28 +342,26 @@ export class ServerPlayer implements PlayerDTO, CollidingObject, HasLife {
 
 }
 
-export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
+export class ServerAsteroid implements AsteroidDTO, CollidingObject {
     static readonly vertexSize_big = 10
     static readonly vertexSize_small = 5
 
     readonly id: string = uuid()
-    x!: number
-    y!: number
-    rotation: number = 0
     readonly maxSize: number
     readonly minSize: number
     readonly vertices: number[][] = []
+    x!: number
+    y!: number
+    rotation: number = 0
 
     needNewTarget = true
 
-    private readonly rotationDelta: number
+    private readonly rotationSpeed: number
     private readonly outsideThreshold = 50
-    private velocity = new Victor(0, 0)
+    private readonly velocity = new Victor(0, 0)
     private speed: number
 
     private readonly collisionHelper = new CollisionHelper()
-
-    isDead: boolean = false
 
     readonly isBig: boolean
     private readonly arena: Arena
@@ -382,10 +371,9 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
         asteroid.x = bigAsteroid.x + Utils.map(Math.random(), 0, 1, -10, 10)
         asteroid.y = bigAsteroid.y + Utils.map(Math.random(), 0, 1, -10, 10)
         asteroid.needNewTarget = false
-        asteroid.velocity = new Victor(
-            Utils.map(Math.random(), 0, 1, -1, 1),
-            Utils.map(Math.random(), 0, 1, -1, 1)
-        ).norm().multiplyScalar(asteroid.speed)
+        asteroid.velocity.x = Utils.map(Math.random(), 0, 1, -1, 1)
+        asteroid.velocity.y = Utils.map(Math.random(), 0, 1, -1, 1)
+        asteroid.velocity.norm().multiplyScalar(asteroid.speed)
         return asteroid
     }
 
@@ -394,28 +382,28 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
         this.isBig = isBig
 
         if (isBig) {
-            this.rotationDelta = Utils.map(Math.random(), 0, 1, 0.01, 0.03)
+            this.rotationSpeed = Utils.map(Math.random(), 0, 1, 0.01, 0.03)
             this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
             this.maxSize = Utils.randInt(80, 100)
             this.minSize = Utils.randInt(40, 60)
 
             const vertexCount = ServerAsteroid.vertexSize_big
             for (let i = 0; i < vertexCount; i++) {
-                const angle = Utils.map(i, 0, vertexCount, 0, TWO_PI)
+                const angle = Utils.map(i, 0, vertexCount, 0, Constants.TWO_PI)
                 const r = Utils.randInt(this.minSize, this.maxSize)
                 const x = r * Math.cos(angle)
                 const y = r * Math.sin(angle)
                 this.vertices.push([x, y])
             }
         } else {
-            this.rotationDelta = Utils.map(Math.random(), 0, 1, 0.05, 0.07)
+            this.rotationSpeed = Utils.map(Math.random(), 0, 1, 0.05, 0.07)
             this.speed = Utils.map(Math.random(), 0, 1, 1.5, 2.5)
             this.maxSize = Utils.randInt(40, 60)
             this.minSize = Utils.randInt(10, 30)
 
             const vertexCount = ServerAsteroid.vertexSize_small
             for (let i = 0; i < vertexCount; i++) {
-                const angle = Utils.map(i, 0, vertexCount, 0, TWO_PI)
+                const angle = Utils.map(i, 0, vertexCount, 0, Constants.TWO_PI)
                 const r = Utils.randInt(this.minSize, this.maxSize)
                 const x = r * Math.cos(angle)
                 const y = r * Math.sin(angle)
@@ -426,26 +414,25 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
         this.arena = arena
     }
 
-    createDigestedData(): AsteroidDTO {
+    toDTO(): AsteroidDTO {
         return {
             id: this.id,
             x: this.x,
             y: this.y,
             rotation: this.rotation,
-            minSize: this.minSize,
-            maxSize: this.maxSize,
             vertices: this.vertices
         }
     }
 
-    setTarget(pos: Victor): void {
-        const v = pos.subtract(new Victor(this.x, this.y))
+    setTarget(x: number, y: number): void {
         if (this.isBig) {
             this.speed = Utils.map(Math.random(), 0, 1, 1, 2)
         } else {
             this.speed = Utils.map(Math.random(), 0, 1, 1.5, 2.5)
         }
-        this.velocity = v.norm().multiplyScalar(this.speed)
+        const v = new Victor(x, y).subtractScalarX(this.x).subtractScalarY(this.y).norm().multiplyScalar(this.speed)
+        this.velocity.x = v.x
+        this.velocity.y = v.y
         this.needNewTarget = false
     }
 
@@ -467,7 +454,7 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
     }
 
     update(width: number, height: number): void {
-        this.rotation += this.rotationDelta
+        this.rotation += this.rotationSpeed
         this.x += this.velocity.x
         this.y += this.velocity.y
 
@@ -487,7 +474,7 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
     }
 
     isCollisionTarget(other: CollidingObject): boolean {
-        if (other instanceof ServerBullet && !other.isDead) {
+        if (other instanceof ServerBullet && !other.needsToBeRecycled) {
             return true
         }
         return false
@@ -503,12 +490,12 @@ export class ServerAsteroid implements AsteroidDTO, CollidingObject, HasLife {
 
 export class BulletHouse {
     private readonly recycledBullets: ServerBullet[] = []
-    readonly usingBullets: ServerBullet[] = []
+    readonly bullets: ServerBullet[] = []
 
     fireBullet(firerId: string, x: number, y: number, heading: number, color: RGBColor): void {
         const bullet = this.createOrGetBullet()
         bullet.setInitValues(firerId, x, y, heading, color)
-        this.usingBullets.push(bullet)
+        this.bullets.push(bullet)
     }
 
     private createOrGetBullet(): ServerBullet {
@@ -520,52 +507,48 @@ export class BulletHouse {
     }
 
     update(width: number, height: number): void {
-        const usingBullets = this.usingBullets
+        const bullets = this.bullets
         const recycledBullets = this.recycledBullets
-        let i = usingBullets.length
+        let i = bullets.length
         while (i--) {
-            const bullet = usingBullets[i]
+            const bullet = bullets[i]
             bullet.update(width, height)
             if (bullet.needsToBeRecycled) {
                 bullet.prepareRecycle()
                 recycledBullets.push(bullet)
-                usingBullets.splice(i, 1)
+                bullets.splice(i, 1)
             }
         }
     }
 
     recycleBulletById(id: string): void {
-        const index = this.usingBullets.findIndex(bullet => bullet.id === id)
+        const index = this.bullets.findIndex(bullet => bullet.id === id)
         if (index >= 0) {
-            const b = this.usingBullets[index]
+            const b = this.bullets[index]
             b.prepareRecycle()
             this.recycledBullets.push(b)
-            this.usingBullets.splice(index, 1)
+            this.bullets.splice(index, 1)
         }
     }
 }
 
-export class ServerBullet implements BulletDTO, CollidingObject, HasLife {
+export class ServerBullet implements BulletDTO, CollidingObject {
     static readonly speed = 10
 
     readonly id: string = uuid()
+    readonly maxSize: number = 5
+    readonly vertices: number[][] = [[0, -this.maxSize], [0, this.maxSize]]
     x: number = 0
     y: number = 0
     heading: number = 0
-    readonly maxSize: number = 5
-    readonly vertices: number[][] = [[0, -this.maxSize], [0, this.maxSize]]
 
     firerId: string | null = null
-    private velocity = new Victor(0, 0)
+    private readonly velocity = new Victor(0, 0)
     color = { r: 255, g: 255, b: 255 }
 
     needsToBeRecycled = false
 
-    get isDead(): boolean {
-        return this.needsToBeRecycled
-    }
-
-    createDigestedData(): BulletDTO {
+    toDTO(): BulletDTO {
         return {
             id: this.id,
             x: this.x,
@@ -581,7 +564,7 @@ export class ServerBullet implements BulletDTO, CollidingObject, HasLife {
         this.x = x
         this.y = y
         this.heading = heading
-        this.velocity = new Victor(1, 1).rotateBy(heading + HALF_PI).norm().multiplyScalar(ServerBullet.speed)
+        this.velocity.addScalar(1).rotateBy(heading + Constants.HALF_PI).norm().multiplyScalar(ServerBullet.speed)
         this.color = color
     }
 

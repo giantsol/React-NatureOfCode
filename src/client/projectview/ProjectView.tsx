@@ -18,7 +18,7 @@ export default class ProjectView extends React.Component<Props, any> {
         let main
         switch (this.props.match.params.projectNum) {
             case "1":
-                main = <Project01 socket={this.props.socket} />
+                main = <Project01 />
                 break
             case "2":
                 main = <Project02 />

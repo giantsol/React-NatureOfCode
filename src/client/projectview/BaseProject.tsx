@@ -47,9 +47,8 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
 
     constructor(props: P) {
         super(props)
-        this.onAnimationFrame = this.onAnimationFrame.bind(this);
         this.state = { sliderValue: 0 }
-
+        this.onAnimationFrame = this.onAnimationFrame.bind(this)
         this.onSliderChanged = this.onSliderChanged.bind(this)
         this.drawNextFrame = this.drawNextFrame.bind(this)
         this.onKeyPressed = this.onKeyPressed.bind(this)
@@ -106,6 +105,14 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
         }
     }
 
+    componentWillUnmount() {
+        this.canvasContext = null
+        this.cancelRequestAnimationFrame()
+
+        document.removeEventListener('keydown', this.onKeyPressed)
+        document.removeEventListener('keyup', this.onKeyReleased)
+    }
+
     onKeyPressed(event: KeyboardEvent): void {
 
     }
@@ -138,14 +145,6 @@ export default abstract class BaseProject<P = {}, S extends State = State> exten
                 this.cancelRequestAnimationFrame()
             }
         }
-    }
-
-    componentWillUnmount() {
-        this.canvasContext = null
-        this.cancelRequestAnimationFrame()
-
-        document.removeEventListener('keydown', this.onKeyPressed)
-        document.removeEventListener('keyup', this.onKeyReleased)
     }
 
     private requestAnimationFrame() {

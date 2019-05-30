@@ -1,14 +1,10 @@
 import BaseProject from "./BaseProject"
 import p5 from "p5"
 
-interface Props {
-    socket: SocketIOClient.Emitter
-}
-
 const TWO_PI = Math.PI * 2
 const p5p = p5.prototype
 
-export default class Project01 extends BaseProject<Props> {
+export default class Project01 extends BaseProject {
 
     setup(): void {
         this.size(500, 500)

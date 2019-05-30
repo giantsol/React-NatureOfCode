@@ -5,19 +5,11 @@ import {BrowserRouter} from "react-router-dom"
 import ProjectSelectionView from "./projectselectionview/ProjectSelectionView"
 import ProjectView from "./projectview/ProjectView"
 
-interface State {
-    myId: string | null
-}
-
-export default class App extends React.Component<any, State> {
+export default class App extends React.Component {
     private readonly socket: SocketIOClient.Emitter
 
     constructor(props: any) {
         super(props)
-        this.state = {
-            myId: null
-        }
-
         this.socket = io.connect()
     }
 
@@ -30,25 +22,6 @@ export default class App extends React.Component<any, State> {
                 </Switch>
             </BrowserRouter>
         )
-
-        // const myId = this.state.myId
-        //
-        // let mainContent
-        // if (myId) {
-        //     mainContent = <GameView socket={this.socket} myId={myId}/>
-        // } else {
-        //     mainContent = <LogInView socket={this.socket} onLoggedIn={this.onLoggedIn}/>
-        // }
-        //
-        // return (
-        //     <React.Fragment>
-        //         {mainContent}
-        //     </React.Fragment>
-        // )
-    }
-
-    private onLoggedIn = (id: string) => {
-        this.setState({myId: id})
     }
 }
 

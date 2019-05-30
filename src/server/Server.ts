@@ -2,7 +2,12 @@ import {Request, Response} from "express"
 import {ServerSocketEventsHelper} from "./ServerSocketEventsHelper"
 import {Socket} from "socket.io"
 import {Arena, ServerAsteroid, ServerBullet, ServerGameData, ServerPlayer} from "./ServerModels"
-import {GameDataDTO, PlayerInputDTO, RootMessageDTO} from "../shared/DTOs"
+import {
+    GameDataDTO,
+    PlayerInputDTO,
+    ProjectPreviewDTO,
+    ProjectSelectionMessageDTO
+} from "../shared/DTOs"
 import {RGBColor} from "react-color"
 
 const paths = require('../../config/paths');
@@ -18,23 +23,23 @@ app.get('/', (req: Request, res: Response) => {
     res.sendFile(paths.appHtml, { root: paths.appBuild })
 })
 
+const rootPassword = "2052"
+
 class Server implements Arena {
 
     static readonly gameUpdateInterval = 1000 / 60
-    private gameDataReceivingSockets: Array<Socket> = []
+    private readonly gameDataReceivingSockets: Array<Socket> = []
     private readonly gameData: ServerGameData = new ServerGameData(this)
 
-    private projectSelectionDataReceivingSockets: Array<Socket> = []
-    private readonly projectPreviews = [
-        { num: 1, name: "First", isOpen: true },
-        { num: 2, name: "Second", isOpen: true },
-        { num: 3, name: "Third", isOpen: false },
-        { num: 4, name: "Fourth", isOpen: true },
-        { num: 5, name: "Final", isOpen: true }
+    private readonly projectSelectionDataReceivingSockets: Array<Socket> = []
+    private readonly projectPreviews: ProjectPreviewDTO[] = [
+        { projectNum: 1, title: "First", isOpen: true },
+        { projectNum: 2, title: "Second", isOpen: true },
+        { projectNum: 3, title: "Third", isOpen: false },
+        { projectNum: 4, title: "Fourth", isOpen: true },
+        { projectNum: 5, title: "Final", isOpen: true }
     ]
     private rootIds: string[] = []
-
-    private readonly rootPassword = "2052"
 
     start(port: string): void {
         http.listen(port, () => {
@@ -42,6 +47,7 @@ class Server implements Arena {
         })
 
         ServerSocketEventsHelper.subscribeConnectedEvent(io, socket => {
+            console.log(`gameDataReceivingSocket count: ${this.gameDataReceivingSockets.length}, projectSelectionDataReceivingSocket count: ${this.projectSelectionDataReceivingSockets.length}`)
             this.subscribeSocketEvents(socket)
         })
 
@@ -54,6 +60,7 @@ class Server implements Arena {
         })
 
         ServerSocketEventsHelper.subscribeDisconnectedEvent(socket, () => {
+            console.log(`gameDataReceivingSocket count: ${this.gameDataReceivingSockets.length}, projectSelectionDataReceivingSocket count: ${this.projectSelectionDataReceivingSockets.length}`)
             this.onDisconnectedEvent(socket)
         })
 
@@ -106,7 +113,7 @@ class Server implements Arena {
         const newPlayer = new ServerPlayer(socket.id, name, color, this.gameData.bulletHouse, this)
         this.gameData.addNewPlayer(newPlayer)
 
-        ServerSocketEventsHelper.sendPlayerLoggedIn(socket, newPlayer.createDigestedData())
+        ServerSocketEventsHelper.sendPlayerLoggedIn(socket, newPlayer.toDTO())
     }
 
     private onStartReceivingGameDataEvent = (socket: Socket) => {
@@ -123,16 +130,16 @@ class Server implements Arena {
     private onDisconnectedEvent = (socket: Socket) => {
         // 유저가 크롬 창을 그냥 닫거나 하는 등의 경우, onPlayerLeavingGameEvent같은게 안들어오고 바로
         // 종료되기 때문에, cleanup이 안되었을 수도 있어서 여기서 다 클린업 해줘야함.
-
         this.onStopReceivingGameDataEvent(socket)
         this.onStopReceivingProjectSelectionDataEvent(socket)
         this.onPlayerLeavingGameEvent(socket)
+        this.onRequestUnrootEvent(socket)
     }
 
     private onPlayerLeavingGameEvent = (socket: Socket) => {
         const disconnectedPlayer = this.gameData.removePlayerById(socket.id)
         if (disconnectedPlayer) {
-            ServerSocketEventsHelper.sendPlayerLeft(socket, disconnectedPlayer.createDigestedData())
+            ServerSocketEventsHelper.sendPlayerLeft(socket, disconnectedPlayer.toDTO())
         }
     }
 
@@ -154,12 +161,12 @@ class Server implements Arena {
     }
 
     private onRequestRootEvent = (socket: Socket, password: string) => {
-        if (password == this.rootPassword) {
+        if (password === rootPassword) {
             this.rootIds.push(socket.id)
             ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
-            ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.ROOT_REQUEST_ACCEPTED)
+            ServerSocketEventsHelper.sendProjectSelectionMessageEvent(socket, ProjectSelectionMessageDTO.ROOTED)
         } else {
-            ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.ROOT_REQUEST_DENIED)
+            ServerSocketEventsHelper.sendProjectSelectionMessageEvent(socket, ProjectSelectionMessageDTO.PERMISSION_DENIED)
         }
     }
 
@@ -169,36 +176,36 @@ class Server implements Arena {
             this.rootIds.splice(index, 1)
         }
         ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
-        ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.UNROOTED)
+        ServerSocketEventsHelper.sendProjectSelectionMessageEvent(socket, ProjectSelectionMessageDTO.UNROOTED)
     }
 
     private onRequestLockProjectEvent = (socket: Socket, projectNum: number) => {
         if (this.rootIds.includes(socket.id)) {
-            const lockTarget = this.projectPreviews.find(preview => preview.num == projectNum)
+            const lockTarget = this.projectPreviews.find(preview => preview.projectNum == projectNum)
             if (lockTarget) {
                 lockTarget.isOpen = false
-                ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.PROJECT_LOCKED)
+                ServerSocketEventsHelper.sendProjectSelectionMessageEvent(socket, ProjectSelectionMessageDTO.PROJECT_LOCKED)
                 this.projectSelectionDataReceivingSockets.forEach(socket => {
                     ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
                 })
             }
         } else {
-            ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.PERMISSION_DENIED)
+            ServerSocketEventsHelper.sendProjectSelectionMessageEvent(socket, ProjectSelectionMessageDTO.PERMISSION_DENIED)
         }
     }
 
     private onRequestUnlockProjectEvent = (socket: Socket, projectNum: number) => {
         if (this.rootIds.includes(socket.id)) {
-            const unlockTarget = this.projectPreviews.find(preview => preview.num == projectNum)
+            const unlockTarget = this.projectPreviews.find(preview => preview.projectNum == projectNum)
             if (unlockTarget) {
                 unlockTarget.isOpen = true
-                ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.PROJECT_UNLOCKED)
+                ServerSocketEventsHelper.sendProjectSelectionMessageEvent(socket, ProjectSelectionMessageDTO.PROJECT_UNLOCKED)
                 this.projectSelectionDataReceivingSockets.forEach(socket => {
                     ServerSocketEventsHelper.sendProjectSelectionData(socket, this.projectPreviews, this.rootIds)
                 })
             }
         } else {
-            ServerSocketEventsHelper.sendRootMessageEvent(socket, RootMessageDTO.PERMISSION_DENIED)
+            ServerSocketEventsHelper.sendProjectSelectionMessageEvent(socket, ProjectSelectionMessageDTO.PERMISSION_DENIED)
         }
     }
 
@@ -206,9 +213,9 @@ class Server implements Arena {
         const gameData = this.gameData
         gameData.update()
 
-        const digestedData: GameDataDTO = gameData.createDigestedData()
+        const gameDataDTO = gameData.toDTO()
         for (let socket of this.gameDataReceivingSockets) {
-            ServerSocketEventsHelper.sendGameData(socket, digestedData)
+            ServerSocketEventsHelper.sendGameData(socket, gameDataDTO)
         }
 
         // recursively call myself
@@ -221,7 +228,7 @@ class Server implements Arena {
         if (killedPlayer) {
             const killedPlayerSocket = this.gameDataReceivingSockets.find(socket => socket.id === killedPlayer.id)
             if (killedPlayerSocket) {
-                ServerSocketEventsHelper.sendKilledByAsteroidEvent(killedPlayerSocket, killedPlayer.createDigestedData())
+                ServerSocketEventsHelper.sendKilledByAsteroidEvent(killedPlayerSocket, killedPlayer.toDTO())
             }
         }
 
@@ -232,7 +239,7 @@ class Server implements Arena {
         const gameData = this.gameData
         if (bullet.firerId) {
             const firer = gameData.getPlayerWithId(bullet.firerId)
-            if (firer && !firer.isDead) {
+            if (firer) {
                 gameData.onAsteroidDamaged(asteroid)
             }
         }
@@ -245,11 +252,10 @@ class Server implements Arena {
         if (bullet.firerId) {
             const firer = gameData.getPlayerWithId(bullet.firerId)
             const killedPlayer = gameData.removePlayerById(player.id)
-            if (firer && !firer.isDead && killedPlayer) {
+            if (firer && killedPlayer) {
                 const killedPlayerSocket = this.gameDataReceivingSockets.find(socket => socket.id === killedPlayer.id)
                 if (killedPlayerSocket) {
-                    ServerSocketEventsHelper.sendKilledByPlayerEvent(killedPlayerSocket,
-                        firer.createDigestedData(), killedPlayer.createDigestedData())
+                    ServerSocketEventsHelper.sendKilledByPlayerEvent(killedPlayerSocket, firer.toDTO(), killedPlayer.toDTO())
                 }
             }
         }

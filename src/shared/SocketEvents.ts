@@ -3,7 +3,7 @@ import {
     PlayerDTO,
     PlayerInputDTO,
     ProjectSelectionDataDTO,
-    RootMessageDTO
+    ProjectSelectionMessageDTO
 } from "./DTOs"
 import {Socket} from "socket.io"
 import {RGBColor} from "react-color"
@@ -112,11 +112,11 @@ export class RequestUnrootEvent {
     static readonly key = "request_unroot"
 }
 
-export type RootMessageEventCallback = (rootMessage: RootMessageDTO) => void
-export class RootMessageEvent {
-    static readonly key = "root_message"
-    static emitterParams(rootMessage: RootMessageDTO): any[] {
-        return [rootMessage]
+export type ProjectSelectionMessageEventCallback = (message: ProjectSelectionMessageDTO) => void
+export class ProjectSelectionMessageEvent {
+    static readonly key = "project_selection_message"
+    static emitterParams(message: ProjectSelectionMessageDTO): any[] {
+        return [message]
     }
 }
 
