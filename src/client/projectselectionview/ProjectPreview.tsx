@@ -54,7 +54,7 @@ export default class ProjectPreview extends React.Component<Props, any> {
                         <CardActionArea disabled>
                             <CardMedia
                                 component="img"
-                                title={this.props.title}
+                                title="??"
                                 style={{height: "140px"}}
                             />
                             <CardContent>
