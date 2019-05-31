@@ -15,6 +15,7 @@ interface Props {
     title: string
     isOpen: boolean
     isRoot: boolean
+    thumbnail: string
 }
 
 export default class ProjectPreview extends React.Component<Props, any> {
@@ -28,7 +29,7 @@ export default class ProjectPreview extends React.Component<Props, any> {
                             <CardActionArea>
                                 <CardMedia
                                     component="img"
-                                    image="/static/images/tempcard.jpg"
+                                    image={this.props.thumbnail}
                                     title={this.props.title}
                                     style={{height: "140px"}}
                                 />
@@ -53,13 +54,12 @@ export default class ProjectPreview extends React.Component<Props, any> {
                         <CardActionArea disabled>
                             <CardMedia
                                 component="img"
-                                image="/static/images/tempcard.jpg"
                                 title={this.props.title}
                                 style={{height: "140px"}}
                             />
                             <CardContent>
                                 <Typography variant="h5" component="h2">
-                                    {this.props.title}
+                                    ???
                                 </Typography>
                             </CardContent>
                             <Typography align="center" variant="h3" color="error"

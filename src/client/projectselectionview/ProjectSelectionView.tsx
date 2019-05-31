@@ -14,6 +14,11 @@ import DialogTitle from "@material-ui/core/DialogTitle"
 import DialogContent from "@material-ui/core/DialogContent"
 import DialogActions from "@material-ui/core/DialogActions"
 import TextField from "@material-ui/core/TextField"
+import first from './first.png'
+import second from './second.png'
+import third from './third.png'
+import fourth from './fourth.png'
+import final from './final.png'
 
 interface Props extends WithSnackbarProps {
     socket: SocketIOClient.Emitter
@@ -27,6 +32,14 @@ interface State {
 }
 
 class ProjectSelectionView extends React.Component<Props, State> {
+    readonly thumbnails = [
+        first,
+        second,
+        third,
+        fourth,
+        fourth,
+        final
+    ]
 
     constructor(props: Props) {
         super(props)
@@ -85,8 +98,8 @@ class ProjectSelectionView extends React.Component<Props, State> {
                         }
                     </Grid>
                     {
-                        this.state.projectPreviews.map((preview: ProjectPreviewDTO) =>
-                            <ProjectPreview key={preview.title} {...preview} isRoot={this.state.isRoot} socket={this.props.socket} />
+                        this.state.projectPreviews.map((preview: ProjectPreviewDTO, index: number) =>
+                            <ProjectPreview key={preview.title} {...preview} isRoot={this.state.isRoot} socket={this.props.socket} thumbnail={this.thumbnails[index]}/>
                         )
                     }
                     <Dialog

@@ -28,11 +28,11 @@ class Server implements Arena {
 
     private readonly projectSelectionDataReceivingSockets: Array<Socket> = []
     private readonly projectPreviews: ProjectPreviewDTO[] = [
-        { projectNum: 1, title: "First", isOpen: true },
-        { projectNum: 2, title: "Second", isOpen: true },
-        { projectNum: 3, title: "Third", isOpen: true },
-        { projectNum: 4, title: "Fourth", isOpen: true },
-        { projectNum: 5, title: "Fifth", isOpen: true },
+        { projectNum: 1, title: "동그라미", isOpen: true },
+        { projectNum: 2, title: "구름", isOpen: true },
+        { projectNum: 3, title: "움직임", isOpen: true },
+        { projectNum: 4, title: "움직임 (feat. 공기)", isOpen: true },
+        { projectNum: 5, title: "총알도 움직임", isOpen: true },
         { projectNum: 6, title: "Final", isOpen: true }
     ]
     private rootIds: string[] = []
