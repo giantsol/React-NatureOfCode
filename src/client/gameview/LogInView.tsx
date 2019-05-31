@@ -10,7 +10,8 @@ import {CirclePicker, ColorResult, RGBColor} from "react-color"
 
 interface Props {
     socket: SocketIOClient.Emitter
-    onLoggedIn: (id: string) => void
+    prevName: string | null
+    onLoggedIn: (id: string, name: string) => void
 }
 
 interface State {
@@ -22,7 +23,7 @@ export default class LogInView extends React.Component<Props, State> {
 
     constructor(props: Props) {
         super(props)
-        this.state = {inputName: '',
+        this.state = {inputName: this.props.prevName || '',
             color: {
                 r: 255,
                 g: 255,
@@ -34,7 +35,7 @@ export default class LogInView extends React.Component<Props, State> {
     componentDidMount(): void {
         const socket = this.props.socket
         ClientSocketEventsHelper.subscribeYouJoinedEvent(socket, you => {
-            this.props.onLoggedIn(you.id)
+            this.props.onLoggedIn(you.id, you.name)
         })
     }
 

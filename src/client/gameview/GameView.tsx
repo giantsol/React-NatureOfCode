@@ -45,6 +45,8 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     private interval = 1000 / this.fps
     private delta: number = 0
 
+    private prevLoggedInName: string | null = null
+
     constructor(props: Props) {
         super(props)
         this.state = { myId: null, canvasFitHeight: true }
@@ -60,15 +62,16 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
                         Fallback text for old browsers.
                     </canvas>
                     { this.state.myId
-                        ? null : <LogInView socket={this.props.socket} onLoggedIn={this.onLoggedIn} />
+                        ? null : <LogInView socket={this.props.socket} prevName={this.prevLoggedInName} onLoggedIn={this.onLoggedIn} />
                     }
                 </div>
             </div>
         )
     }
 
-    private onLoggedIn = (id: string) => {
+    private onLoggedIn = (id: string, name: string) => {
         this.setState({myId: id})
+        this.prevLoggedInName = name
     }
 
     componentDidMount(): void {
