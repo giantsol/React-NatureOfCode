@@ -17,8 +17,9 @@ export default class Project01 extends BaseProject {
         let noiseMax = this.getSliderValue()
 
         this.translate(this.width / 4, this.height / 2)
+        this.fill(255)
         this.stroke(0)
-        this.strokeWeight(2)
+        this.strokeWeight(4)
         this.beginShape()
         for (let a = 0; a < TWO_PI; a += 0.1) {
             let r
