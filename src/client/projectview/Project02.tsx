@@ -3,11 +3,11 @@ import Utils from "../../shared/Utils"
 import * as p5 from "p5"
 
 export default class Project02 extends BaseProject {
-    private readonly increment = 0.02
     private xoff = 0.0
 
     setup(): void {
         this.size(800, 800)
+        this.createSlider(0.005, 0.1, 0.005, 0.01)
     }
 
     draw(): void {
@@ -22,7 +22,7 @@ export default class Project02 extends BaseProject {
         const rightHalfPixels = rightHalf.data
 
         let xoff = this.xoff
-        const increment = this.increment
+        const increment = this.getSliderValue()
         for (let x = 0; x < 300; x++) {
             xoff += increment
             let yoff = 0.0
@@ -30,7 +30,7 @@ export default class Project02 extends BaseProject {
                 yoff += increment
 
                 const randBrightness = Utils.randFloat(0, 255)
-                const noiseBrightness = p5.prototype.noise(xoff, yoff) * 255
+                const noiseBrightness = p5.prototype.map(p5.prototype.noise(xoff, yoff, increment * 100), 0, 1, 125, 255)
 
                 const [r, g, b, a] = Utils.getPixelColorIndicesForCoord(x, y, 300)
                 leftHalfPixels[r] = randBrightness
