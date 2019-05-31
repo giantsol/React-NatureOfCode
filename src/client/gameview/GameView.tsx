@@ -457,6 +457,13 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         }
     }
 
+    noStroke(): void {
+        const context = this.canvasContext
+        if (context) {
+            context.strokeStyle = 'rgba(0,0,0,0)'
+        }
+    }
+
 }
 
 export default withSnackbar(GameView)

@@ -30,7 +30,7 @@ class Server implements Arena {
     private readonly projectPreviews: ProjectPreviewDTO[] = [
         { projectNum: 1, title: "First", isOpen: true },
         { projectNum: 2, title: "Second", isOpen: true },
-        { projectNum: 3, title: "Third", isOpen: false },
+        { projectNum: 3, title: "Third", isOpen: true },
         { projectNum: 4, title: "Fourth", isOpen: true },
         { projectNum: 5, title: "Final", isOpen: true }
     ]

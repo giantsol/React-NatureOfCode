@@ -2,8 +2,9 @@ import React from 'react'
 import {RouteComponentProps} from "react-router"
 import Project01 from "./Project01"
 import Project02 from "./Project02"
-import Project04 from "./Project04"
+import Project03 from "./Project03"
 import GameView from "../gameview/GameView"
+import Project04 from "./Project04"
 
 interface MatchParams {
     projectNum: string
@@ -22,6 +23,9 @@ export default class ProjectView extends React.Component<Props, any> {
                 break
             case "2":
                 main = <Project02 />
+                break
+            case "3":
+                main = <Project03 />
                 break
             case "4":
                 main = <Project04 />

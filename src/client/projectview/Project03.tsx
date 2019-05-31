@@ -1,11 +1,11 @@
 import BaseProject from "./BaseProject"
 import * as p5 from "p5"
 import CustomP5Methods from "../CustomP5Methods"
-import {Constants} from "../../shared/Constants"
 
 const p5p = p5.prototype
+const HALF_PI = Math.PI / 2
 
-export default class Project04 extends BaseProject {
+export default class Project03 extends BaseProject {
     private ship!: Ship
 
     setup(): void {
@@ -14,12 +14,6 @@ export default class Project04 extends BaseProject {
     }
 
     draw(): void {
-        this.save()
-        this.fill(0, 125, 125, 0.3)
-        this.noStroke()
-        this.rect(0, 500, 800, 300)
-        this.restore()
-
         this.ship.update()
         this.ship.render()
     }
@@ -64,7 +58,7 @@ class Ship {
         const p5 = this.p5
         const r = this.radius
         p5.translate(this.pos.x, this.pos.y)
-        p5.rotate(this.heading + Constants.HALF_PI)
+        p5.rotate(this.heading + HALF_PI)
         p5.noFill()
         p5.stroke(0)
         p5.triangle(-r, r, r, r, 0, -r)
@@ -92,17 +86,6 @@ class Ship {
             this.boostingForce.mult(0)
         }
         this.acceleration.add(this.boostingForce)
-
-        if (this.pos.y > 500) {
-            // apply air resistance force
-            const c = 0.01
-            const speed = this.velocity.mag()
-            const dragMag = c * speed * speed
-            const dragForce = this.velocity.copy()
-            dragForce.mult(-1).normalize().mult(dragMag)
-            this.acceleration.add(dragForce)
-        }
-
         this.velocity.add(this.acceleration)
         this.pos.add(this.velocity)
 
@@ -129,12 +112,10 @@ class Ship {
             pos.x = width + r
         }
 
-        if (pos.y > height) {
-            pos.y = height
-            this.velocity.y = 0
-        } else if (pos.y < 0) {
-            pos.y = 0
-            this.velocity.y = 0
+        if (pos.y > height + r) {
+            pos.y = -r
+        } else if (pos.y < -r) {
+            pos.y = height + r
         }
     }
 }

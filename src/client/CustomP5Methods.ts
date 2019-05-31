@@ -9,6 +9,7 @@ export default interface CustomP5Methods {
     stroke(r: number, g: number, b: number): void
     stroke(r: number, g: number, b: number, a: number): void
     strokeWeight(weight: number): void
+    noStroke(): void
     fill(color: number): void
     fill(r: number, g: number, b: number): void
     fill(r: number, g: number, b: number, a: number): void
