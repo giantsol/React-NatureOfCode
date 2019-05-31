@@ -7,6 +7,7 @@ import {WithSnackbarProps} from "notistack/build"
 import LogInView from "./LogInView"
 import CustomP5Methods from "../CustomP5Methods"
 import './GameView.css'
+import {RGBColor} from "react-color"
 
 interface Props extends WithSnackbarProps {
     socket: SocketIOClient.Emitter
@@ -46,6 +47,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
     private delta: number = 0
 
     private prevLoggedInName: string | null = null
+    private prevLoggedInColor: RGBColor | null = null
 
     constructor(props: Props) {
         super(props)
@@ -62,7 +64,7 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
                         Fallback text for old browsers.
                     </canvas>
                     { this.state.myId
-                        ? null : <LogInView socket={this.props.socket} prevName={this.prevLoggedInName} onLoggedIn={this.onLoggedIn} />
+                        ? null : <LogInView socket={this.props.socket} prevName={this.prevLoggedInName} prevColor={this.prevLoggedInColor} onLoggedIn={this.onLoggedIn} />
                     }
                 </div>
             </div>

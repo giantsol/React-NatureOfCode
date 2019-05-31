@@ -11,6 +11,7 @@ import {CirclePicker, ColorResult, RGBColor} from "react-color"
 interface Props {
     socket: SocketIOClient.Emitter
     prevName: string | null
+    prevColor: RGBColor | null
     onLoggedIn: (id: string, name: string) => void
 }
 
@@ -24,7 +25,7 @@ export default class LogInView extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props)
         this.state = {inputName: this.props.prevName || '',
-            color: {
+            color: this.props.prevColor || {
                 r: 255,
                 g: 255,
                 b: 255
