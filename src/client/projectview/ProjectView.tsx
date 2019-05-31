@@ -5,6 +5,7 @@ import Project02 from "./Project02"
 import Project03 from "./Project03"
 import GameView from "../gameview/GameView"
 import Project04 from "./Project04"
+import Project05 from "./Project05"
 
 interface MatchParams {
     projectNum: string
@@ -31,6 +32,9 @@ export default class ProjectView extends React.Component<Props, any> {
                 main = <Project04 />
                 break
             case "5":
+                main = <Project05 />
+                break
+            case "6":
                 main = <GameView socket={this.props.socket} />
                 break
         }

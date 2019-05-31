@@ -32,7 +32,8 @@ class Server implements Arena {
         { projectNum: 2, title: "Second", isOpen: true },
         { projectNum: 3, title: "Third", isOpen: true },
         { projectNum: 4, title: "Fourth", isOpen: true },
-        { projectNum: 5, title: "Final", isOpen: true }
+        { projectNum: 5, title: "Fifth", isOpen: true },
+        { projectNum: 6, title: "Final", isOpen: true }
     ]
     private rootIds: string[] = []
 
