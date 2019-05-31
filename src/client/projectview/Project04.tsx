@@ -70,9 +70,9 @@ class Ship {
         p5.triangle(-r, r, r, r, 0, -r)
 
         p5.setDebugText(
-            `Force x: ${Number(this.boostingForce.x.toPrecision(2))}, y: ${Number(this.boostingForce.y.toPrecision(2))}
-            Acceleration x: ${Number(this.acceleration.x.toPrecision(2))}, y: ${Number(this.acceleration.y.toPrecision(2))}
-            Velocity x: ${Number(this.velocity.x.toPrecision(2))}, y: ${Number(this.velocity.y.toPrecision(2))}
+            `가속도 x: ${Number(this.acceleration.x.toPrecision(2))}, y: ${Number(this.acceleration.y.toPrecision(2))}
+            속도 x: ${Number(this.velocity.x.toPrecision(2))}, y: ${Number(this.velocity.y.toPrecision(2))}
+            위치 x: ${Number(this.pos.x.toPrecision(2))}, y: ${Number(this.pos.x.toPrecision(2))}
             `
         )
 
@@ -114,7 +114,7 @@ class Ship {
     }
 
     getBoostingForce(): p5.Vector {
-        return p5.Vector.mult(p5.Vector.fromAngle(this.heading), 0.1)
+        return p5.Vector.mult(p5.Vector.fromAngle(this.heading), 0.05)
     }
 
     edges(): void {

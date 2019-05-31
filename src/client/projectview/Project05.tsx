@@ -63,6 +63,7 @@ class Ship {
     private readonly bulletPos = p5p.createVector(-100, -100)
     private readonly bulletVelocity = p5p.createVector(0, 0)
     private readonly bulletAcceleration = p5p.createVector(0, 0)
+    private bulletFireForce = p5p.createVector(0, 0)
     private readonly bulletFirePower = 40
 
     private readonly airResistanceConstant = 0.01
@@ -93,13 +94,14 @@ class Ship {
         p5.restore()
 
         p5.setDebugText(
-            `Force x: ${Number(this.boostingForce.x.toPrecision(2))}, y: ${Number(this.boostingForce.y.toPrecision(2))}
-            Acceleration x: ${Number(this.acceleration.x.toPrecision(2))}, y: ${Number(this.acceleration.y.toPrecision(2))}
-            Velocity x: ${Number(this.velocity.x.toPrecision(2))}, y: ${Number(this.velocity.y.toPrecision(2))}
+            `가속도 x: ${Number(this.bulletAcceleration.x.toPrecision(2))}, y: ${Number(this.bulletAcceleration.y.toPrecision(2))}
+            속도 x: ${Number(this.bulletVelocity.x.toPrecision(2))}, y: ${Number(this.bulletVelocity.y.toPrecision(2))}
+            위치 x: ${Number(this.bulletPos.x.toPrecision(2))}, y: ${Number(this.bulletPos.x.toPrecision(2))}
             `
         )
 
         this.acceleration.mult(0)
+        this.bulletFireForce.mult(0)
         this.bulletAcceleration.mult(0)
     }
 
@@ -148,7 +150,7 @@ class Ship {
     }
 
     getBoostingForce(): p5.Vector {
-        return p5.Vector.mult(p5.Vector.fromAngle(this.heading), 0.1)
+        return p5.Vector.mult(p5.Vector.fromAngle(this.heading), 0.05)
     }
 
     edges(): void {
@@ -181,7 +183,8 @@ class Ship {
     fireBullet(): void {
         this.bulletHeading = this.heading + Constants.HALF_PI
         this.bulletPos.set(this.pos.x, this.pos.y)
-        this.bulletAcceleration.add(p5.Vector.mult(p5.Vector.fromAngle(this.heading), this.bulletFirePower))
+        this.bulletFireForce = p5.Vector.mult(p5.Vector.fromAngle(this.heading), this.bulletFirePower)
+        this.bulletAcceleration.add(this.bulletFireForce)
     }
 }
 
