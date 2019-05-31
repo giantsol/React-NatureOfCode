@@ -12,7 +12,7 @@ interface Props {
     socket: SocketIOClient.Emitter
     prevName: string | null
     prevColor: RGBColor | null
-    onLoggedIn: (id: string, name: string) => void
+    onLoggedIn: (id: string, name: string, color: RGBColor) => void
 }
 
 interface State {
@@ -36,7 +36,7 @@ export default class LogInView extends React.Component<Props, State> {
     componentDidMount(): void {
         const socket = this.props.socket
         ClientSocketEventsHelper.subscribeYouJoinedEvent(socket, you => {
-            this.props.onLoggedIn(you.id, you.name)
+            this.props.onLoggedIn(you.id, you.name, you.color)
         })
     }
 

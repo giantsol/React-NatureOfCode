@@ -71,9 +71,10 @@ class GameView extends React.Component<Props, State> implements CustomP5Methods 
         )
     }
 
-    private onLoggedIn = (id: string, name: string) => {
+    private onLoggedIn = (id: string, name: string, color: RGBColor) => {
         this.setState({myId: id})
         this.prevLoggedInName = name
+        this.prevLoggedInColor = color
     }
 
     componentDidMount(): void {
